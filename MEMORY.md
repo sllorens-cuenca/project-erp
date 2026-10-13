@@ -11,7 +11,7 @@ aporte.
   listados con barra de comandos y flujo de estados, email automático, recordatorio diario.
 - Datos en SQLite de desarrollo (`apps/api/prisma/dev.db`). Seed: `admin@almacen.local / admin1234`.
 - Email en modo `json` (imprime en consola, **no envía**).
-- Skills de agentes instaladas (`npx skills add vercel-labs/agent-skills`): 9 en `.agents/skills/` + `skills-lock.json`.
+- Skills de agentes instaladas (`npx skills add`): 10 en `.agents/skills/` + `skills-lock.json` (fuentes `vercel-labs/agent-skills` y `vercel-labs/skills`; incluye `find-skills`).
 
 ## Decisiones (y por qué)
 
