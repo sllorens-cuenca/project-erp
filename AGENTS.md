@@ -71,7 +71,7 @@ dupliques aquí; este archivo es solo contexto operativo que no es obvio.
 - `apps/api/tsconfig.build.json` fija `tsBuildInfoFile: "./dist/.tsbuildinfo"` a
   propósito. **No lo muevas fuera de `dist`**: con `deleteOutDir` + `incremental`,
   un tsbuildinfo fuera de dist deja `dist/` incompleto (faltan ficheros).
-  
+
 ## Memoria
 - Al empezar, lee `MEMORY.md` para conocer el estado del proyecto y las decisiones
 tomadas.
@@ -81,3 +81,8 @@ porqué) y errores a evitar.
 - Si algo se convierte en una regla permanente, propón moverlo a `AGENTS.md` en lugar de
 dejarlo en la memoria.
 - No guardes nunca datos sensibles (claves, tokens, datos personales).
+
+## Limite
+- ✅ Siempre: actualizar `MEMORY.md` al terminar cada tarea.
+- ✅ Siempre: respetar las reglas de fechas y racha, mantener los textos en español.
+- ⚠ Pregunta antes: crear archivos nuevos, cambiar el formato de los datos guardados.
