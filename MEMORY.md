@@ -11,6 +11,7 @@ aporte.
   listados con barra de comandos y flujo de estados, email automático, recordatorio diario.
 - Datos en SQLite de desarrollo (`apps/api/prisma/dev.db`). Seed: `admin@almacen.local / admin1234`.
 - Email en modo `json` (imprime en consola, **no envía**).
+- Skills de agentes instaladas (`npx skills add vercel-labs/agent-skills`): 9 en `.agents/skills/` + `skills-lock.json`.
 
 ## Decisiones (y por qué)
 
@@ -26,6 +27,7 @@ aporte.
   sin reiniciar el proceso.
 - Email tras `MAIL_TRANSPORT` (`json`/`smtp`): desarrollo sin credenciales reales.
 - Node 22 vía nvm (el sistema trae v12): requisito del stack moderno.
+- Aprovechar las skills de Vercel: guías de React/Next aplicables ya y de RN/Expo para la Fase iOS.
 
 ## Aprendizajes y errores a evitar
 
@@ -44,3 +46,4 @@ aporte.
 - Push móvil para el recordatorio diario.
 - Configurar SMTP/proveedor transaccional real y decidir hosting (Postgres gestionado + deploy).
 - Añadir tests y lint (hoy no existen).
+- Decidir si se versionan `.agents/skills/` y `skills-lock.json` (hoy sin commitear).
