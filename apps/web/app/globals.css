@@ -11,7 +11,7 @@ body {
 }
 
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2;
 }
 .btn-primary {
   @apply btn bg-brand text-white hover:bg-brand-dark;
@@ -33,4 +33,20 @@ body {
 }
 .badge {
   @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+}
+
+/* Foco visible también en enlaces (accesibilidad con teclado). */
+a:focus-visible {
+  @apply rounded outline-none ring-2 ring-brand ring-offset-2;
+}
+
+/* Respeta a quien prefiere menos movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -2,14 +2,24 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { USER_ROLE_LABELS, type UserRole } from '@erp/shared'
 import { useAuth, useRequireAuth } from '@/lib/auth'
 
-const NAV = [
+interface NavItem {
+  href: string
+  label: string
+  /** Si se indica, el item solo se muestra a ese rol. */
+  role?: UserRole
+}
+
+const NAV: NavItem[] = [
   { href: '/', label: 'Panel' },
   { href: '/clientes', label: 'Clientes' },
   { href: '/materiales', label: 'Materiales' },
   { href: '/listados', label: 'Listados' },
+  { href: '/movimientos', label: 'Movimientos' },
   { href: '/recordatorios', label: 'Recordatorios' },
+  { href: '/usuarios', label: 'Usuarios', role: 'ADMIN' },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -22,6 +32,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
   if (!user) return null
 
+  const nav = NAV.filter((item) => !item.role || item.role === user.role)
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white">
@@ -31,7 +43,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               📦 Almacén
             </Link>
             <nav className="hidden gap-1 md:flex">
-              {NAV.map((item) => {
+              {nav.map((item) => {
                 const active =
                   item.href === '/'
                     ? pathname === '/'
@@ -53,16 +65,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
           <div className="flex items-center gap-3 text-sm">
-            <span className="hidden text-slate-500 sm:inline">
-              {user.name} · <span className="text-xs">{user.role}</span>
-            </span>
+            <Link
+              href="/perfil"
+              title="Ver mi perfil"
+              className="hidden text-right leading-tight text-slate-500 hover:text-brand-dark sm:block"
+            >
+              <span className="block font-medium text-slate-700">
+                {user.name}
+              </span>
+              <span className="block text-xs">
+                {USER_ROLE_LABELS[user.role as UserRole] ?? user.role}
+              </span>
+            </Link>
             <button onClick={logout} className="btn-secondary">
               Salir
             </button>
           </div>
         </div>
         <nav className="flex gap-1 overflow-x-auto border-t border-slate-100 px-4 py-2 md:hidden">
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}

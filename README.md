@@ -57,6 +57,11 @@ npm run dev:web         # http://localhost:3000
 | Administrador | `admin@almacen.local` | `admin1234` |
 | Almacenero | `almacen@almacen.local` | `almacen1234` |
 
+> Las credenciales de ejemplo solo se muestran en la pantalla de login en
+> **desarrollo** (nunca en producción). Si la base de datos está vacía, la web
+> redirige al **primer arranque** (`/setup`) para crear el administrador, sin
+> necesidad de ejecutar el seed.
+
 ## Funcionalidades
 
 1. **Clientes y carpetas por obra/servicio** — `Cliente → Obra` con tipo de
@@ -69,6 +74,8 @@ npm run dev:web         # http://localhost:3000
    cliente + copia interna** del almacén.
 5. **Recordatorio diario** — correo con los listados pendientes de confirmar,
    a la hora configurable.
+6. **Usuarios y perfil** — alta, edición y baja lógica de usuarios (solo ADMIN);
+   cada usuario edita su perfil y cambia su contraseña.
 
 ### Barra de comandos
 
@@ -138,6 +145,8 @@ migración sea directa:
 - [x] **Fase 5** Export CSV/PDF + email automático
 - [x] **Fase 6** Recordatorio diario (email)
 - [x] **Fase 7** Web UI
+- [x] **Fase 7b** Cierre web: primer arranque (`/setup`), usuarios (ADMIN), perfil
+      y cambio de contraseña, historial de movimientos, pulido de UX
 - [ ] **Fase 8** App iOS (React Native/Expo o SwiftUI) sobre esta API
 - [ ] Push móvil para el recordatorio (cuando exista la app)
 
@@ -145,7 +154,7 @@ migración sea directa:
 
 | Recurso | Endpoints |
 |---------|-----------|
-| Auth | `POST /api/auth/login`, `GET /api/auth/setup/status`, `POST /api/auth/setup`, `GET /api/auth/me` |
+| Auth | `POST /api/auth/login`, `GET /api/auth/setup/status`, `POST /api/auth/setup`, `GET /api/auth/me`, `PATCH /api/auth/me`, `PATCH /api/auth/me/password` |
 | Usuarios | `GET/POST /api/users`, `GET/PATCH/DELETE /api/users/:id` (ADMIN) |
 | Clientes | `GET/POST /api/clients`, `GET/PATCH/DELETE /api/clients/:id` |
 | Obras | `GET/POST /api/projects`, `GET/PATCH/DELETE /api/projects/:id` |

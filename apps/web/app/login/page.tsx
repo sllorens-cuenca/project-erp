@@ -5,20 +5,27 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
 
+/** Credenciales de ejemplo: solo se muestran fuera de producción. */
+const IS_DEV = process.env.NODE_ENV !== 'production'
+
 export default function LoginPage() {
   const { login } = useAuth()
   const router = useRouter()
-  const [email, setEmail] = useState('admin@almacen.local')
-  const [password, setPassword] = useState('admin1234')
+  const [email, setEmail] = useState(IS_DEV ? 'admin@almacen.local' : '')
+  const [password, setPassword] = useState(IS_DEV ? 'admin1234' : '')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [configured, setConfigured] = useState<boolean | null>(null)
 
   useEffect(() => {
     apiFetch<{ configured: boolean }>('/auth/setup/status')
-      .then((r) => setConfigured(r.configured))
+      .then((r) => {
+        setConfigured(r.configured)
+        // Primer arranque: aún no hay usuarios → crear el administrador.
+        if (!r.configured) router.replace('/setup')
+      })
       .catch(() => setConfigured(true))
-  }, [])
+  }, [router])
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,8 +51,11 @@ export default function LoginPage() {
 
         {configured === false && (
           <p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
-            Primer arranque: aún no hay usuarios. Ejecuta el seed
-            (<code>npm run db:seed</code>) o crea el administrador inicial.
+            Primer arranque: aún no hay usuarios.{' '}
+            <a href="/setup" className="font-medium underline">
+              Crea el administrador inicial
+            </a>
+            .
           </p>
         )}
 
@@ -80,9 +90,11 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-xs text-slate-400">
-          Demo: admin@almacen.local / admin1234
-        </p>
+        {IS_DEV && (
+          <p className="mt-4 text-center text-xs text-slate-400">
+            Demo: admin@almacen.local / admin1234
+          </p>
+        )}
       </div>
     </div>
   )

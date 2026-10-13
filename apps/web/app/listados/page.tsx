@@ -4,7 +4,7 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { AppShell } from '@/components/AppShell'
-import { EmptyState, ServiceBadge, StatusBadge } from '@/components/ui'
+import { EmptyState, ErrorState, ServiceBadge, StatusBadge } from '@/components/ui'
 import { apiFetch } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
 
@@ -45,7 +45,7 @@ function Listados() {
   if (status) query.set('status', status)
   const qs = query.toString()
 
-  const { data, loading, reload } = useApi<ListRow[]>(
+  const { data, loading, reload, error } = useApi<ListRow[]>(
     `/lists${qs ? `?${qs}` : ''}`,
     [obra, status],
   )
@@ -83,12 +83,14 @@ function Listados() {
         </select>
       </div>
 
-      {loading ? (
+      {error ? (
+        <ErrorState>{error}</ErrorState>
+      ) : loading ? (
         <p className="text-sm text-slate-500">Cargando…</p>
       ) : !data || data.length === 0 ? (
         <EmptyState>No hay listados con estos filtros.</EmptyState>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-slate-500">
               <tr>

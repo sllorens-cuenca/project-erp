@@ -22,6 +22,8 @@ interface AuthContextValue {
   user: StoredUser | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
+  /** Guarda una sesión ya emitida por la API (setup o cambio de perfil). */
+  applySession: (accessToken: string, user: StoredUser) => void
   logout: () => void
 }
 
@@ -37,13 +39,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false)
   }, [])
 
+  const applySession = (accessToken: string, nextUser: StoredUser) => {
+    storeSession(accessToken, nextUser)
+    setUser(nextUser)
+  }
+
   const login = async (email: string, password: string) => {
     const res = await apiFetch<{ accessToken: string; user: StoredUser }>(
       '/auth/login',
       { method: 'POST', body: JSON.stringify({ email, password }) },
     )
-    storeSession(res.accessToken, res.user)
-    setUser(res.user)
+    applySession(res.accessToken, res.user)
   }
 
   const logout = () => {
@@ -53,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const value = useMemo(
-    () => ({ user, loading, login, logout }),
+    () => ({ user, loading, login, applySession, logout }),
     [user, loading],
   )
 

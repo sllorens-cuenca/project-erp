@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { AppShell } from '@/components/AppShell'
-import { EmptyState, ServiceBadge, StatusBadge } from '@/components/ui'
+import { EmptyState, ErrorState, ServiceBadge, StatusBadge } from '@/components/ui'
 import { useApi } from '@/lib/useApi'
 
 interface ListRow {
@@ -30,6 +30,14 @@ export default function PanelPage() {
   return (
     <AppShell>
       <h1 className="mb-6 text-2xl font-semibold">Panel de almacén</h1>
+
+      {(pending.error || recent.error || low.error) && (
+        <div className="mb-6">
+          <ErrorState>
+            No se pudieron cargar algunos datos del panel.
+          </ErrorState>
+        </div>
+      )}
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <StatCard

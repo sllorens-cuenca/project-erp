@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { AppShell } from '@/components/AppShell'
-import { EmptyState } from '@/components/ui'
+import { EmptyState, ErrorState } from '@/components/ui'
 import { apiFetch } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
 
@@ -17,7 +17,7 @@ interface Client {
 }
 
 export default function ClientesPage() {
-  const { data, loading, reload } = useApi<Client[]>('/clients')
+  const { data, loading, reload, error } = useApi<Client[]>('/clients')
   const [showForm, setShowForm] = useState(false)
   const [search, setSearch] = useState('')
   const { data: filtered } = useApi<Client[]>(
@@ -51,12 +51,14 @@ export default function ClientesPage() {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      {loading ? (
+      {error ? (
+        <ErrorState>{error}</ErrorState>
+      ) : loading ? (
         <p className="text-sm text-slate-500">Cargando…</p>
       ) : !clients || clients.length === 0 ? (
         <EmptyState>No hay clientes todavía.</EmptyState>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-slate-500">
               <tr>

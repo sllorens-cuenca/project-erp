@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { AppShell } from '@/components/AppShell'
-import { EmptyState } from '@/components/ui'
+import { EmptyState, ErrorState } from '@/components/ui'
 import {
   MATERIAL_UNITS,
   MaterialUnit,
@@ -24,7 +25,7 @@ interface Material {
 
 export default function MaterialesPage() {
   const [search, setSearch] = useState('')
-  const { data, loading, reload } = useApi<Material[]>(
+  const { data, loading, reload, error } = useApi<Material[]>(
     search
       ? `/materials?search=${encodeURIComponent(search)}`
       : '/materials',
@@ -58,12 +59,14 @@ export default function MaterialesPage() {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      {loading ? (
+      {error ? (
+        <ErrorState>{error}</ErrorState>
+      ) : loading ? (
         <p className="text-sm text-slate-500">Cargando…</p>
       ) : !data || data.length === 0 ? (
         <EmptyState>No hay materiales.</EmptyState>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-slate-500">
               <tr>
@@ -95,9 +98,15 @@ export default function MaterialesPage() {
                     <td className="px-4 py-2 text-right text-slate-400">
                       {m.minStock} {m.unit}
                     </td>
-                    <td className="px-4 py-2 text-right">
+                    <td className="whitespace-nowrap px-4 py-2 text-right">
+                      <Link
+                        href={`/movimientos?materialId=${m.id}`}
+                        className="text-sm text-slate-500 hover:text-brand-dark hover:underline"
+                      >
+                        Historial
+                      </Link>
                       <button
-                        className="btn-secondary"
+                        className="btn-secondary ml-3"
                         onClick={() => setMovementFor(m)}
                       >
                         Movimiento

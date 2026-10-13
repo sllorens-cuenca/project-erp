@@ -35,3 +35,11 @@ export function EmptyState({ children }: { children: React.ReactNode }) {
     </div>
   )
 }
+
+export function ErrorState({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+      {children}
+    </div>
+  )
+}

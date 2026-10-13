@@ -14,6 +14,12 @@ export const UserRole = {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 export const USER_ROLES = Object.values(UserRole)
 
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  ADMIN: 'Administrador',
+  ALMACENERO: 'Almacenero',
+  TECNICO: 'Técnico',
+}
+
 export const ServiceType = {
   INSTALACION: 'INSTALACION',
   REPARACION: 'REPARACION',
