@@ -5,7 +5,7 @@ aporte.
 
 ## Estado actual
 
-- Fase web funcionando: monorepo npm workspaces (`apps/api`, `apps/web`, `packages/shared`).
+- Fase web funcionando: monorepo npm workspaces (`apps/api`, `apps/web`, `packages/shared`). Publicado en GitHub: `sllorens-cuenca/project-erp` (rama `main`).
 - API NestJS en :3001 (prefijo `/api`); web Next.js en :3000.
 - Funcionalidades completas: clientes→obras/servicios, materiales con stock y mínimos,
   listados con barra de comandos y flujo de estados, email automático, recordatorio diario.
