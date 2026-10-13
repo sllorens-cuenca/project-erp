@@ -1,0 +1,19 @@
+{
+  "name": "@erp/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tipos, enums y esquemas compartidos entre la API y la web.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

@@ -1,0 +1,88 @@
+import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+import * as bcrypt from 'bcryptjs'
+import type { AuthUser, LoginResponse } from '@erp/shared'
+import { UserRole } from '@erp/shared'
+import { PrismaService } from '../prisma/prisma.service'
+import { LoginDto } from './dto/login.dto'
+import { RegisterDto } from './dto/register.dto'
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwt: JwtService,
+  ) {}
+
+  async login(dto: LoginDto): Promise<LoginResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email.toLowerCase() },
+    })
+    if (!user || !user.active) {
+      throw new UnauthorizedException('Credenciales incorrectas')
+    }
+    const valid = await bcrypt.compare(dto.password, user.passwordHash)
+    if (!valid) {
+      throw new UnauthorizedException('Credenciales incorrectas')
+    }
+    return this.buildResponse(user)
+  }
+
+  /** ¿Existe ya algún usuario en el sistema? (para el onboarding). */
+  async isSetupComplete(): Promise<boolean> {
+    return (await this.prisma.user.count()) > 0
+  }
+
+  /**
+   * Configuración inicial: crea el primer usuario como ADMIN.
+   * Solo funciona mientras no exista ningún usuario.
+   */
+  async setup(dto: RegisterDto): Promise<LoginResponse> {
+    if (await this.isSetupComplete()) {
+      throw new UnauthorizedException(
+        'La configuración inicial ya se ha completado',
+      )
+    }
+    const passwordHash = await bcrypt.hash(dto.password, 10)
+    const user = await this.prisma.user.create({
+      data: {
+        name: dto.name,
+        email: dto.email.toLowerCase(),
+        passwordHash,
+        role: UserRole.ADMIN,
+      },
+    })
+    return this.buildResponse(user)
+  }
+
+  async validateUserById(id: string): Promise<AuthUser | null> {
+    const user = await this.prisma.user.findUnique({ where: { id } })
+    if (!user || !user.active) return null
+    return this.toAuthUser(user)
+  }
+
+  private buildResponse(user: {
+    id: string
+    email: string
+    name: string
+    role: string
+  }): LoginResponse {
+    const authUser = this.toAuthUser(user)
+    const accessToken = this.jwt.sign(authUser)
+    return { accessToken, user: authUser }
+  }
+
+  private toAuthUser(user: {
+    id: string
+    email: string
+    name: string
+    role: string
+  }): AuthUser {
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role as UserRole,
+    }
+  }
+}

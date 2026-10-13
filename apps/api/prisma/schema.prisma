@@ -1,0 +1,171 @@
+// Esquema Prisma de la app de almacén.
+//
+// Desarrollo: SQLite (no requiere instalar nada).
+// Producción: cambia `provider` a "postgresql" y ajusta DATABASE_URL.
+// El esquema evita enums nativos y tipos específicos de Postgres para que
+// la migración a PostgreSQL sea directa (los enums viven en @erp/shared).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("TECNICO")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdLists   MaterialList[]  @relation("ListCreatedBy")
+  confirmedLists MaterialList[]  @relation("ListConfirmedBy")
+  movements      StockMovement[]
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  taxId     String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects Project[]
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  clientId    String
+  name        String
+  serviceType String    @default("OTRO")
+  status      String    @default("ABIERTA")
+  address     String?
+  notes       String?
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  client    Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  lists     MaterialList[]
+  movements StockMovement[]
+
+  @@index([clientId])
+  @@index([serviceType])
+}
+
+model Material {
+  id        String   @id @default(cuid())
+  sku       String   @unique
+  name      String
+  category  String?
+  unit      String   @default("UD")
+  stock     Float    @default(0)
+  minStock  Float    @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listItems MaterialListItem[]
+  movements StockMovement[]
+
+  @@index([name])
+}
+
+model StockMovement {
+  id         String   @id @default(cuid())
+  materialId String
+  projectId  String?
+  userId     String?
+  type       String
+  quantity   Float
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  project  Project? @relation(fields: [projectId], references: [id])
+  user     User?    @relation(fields: [userId], references: [id])
+
+  @@index([materialId])
+  @@index([projectId])
+}
+
+model MaterialList {
+  id            String    @id @default(cuid())
+  projectId     String
+  status        String    @default("BORRADOR")
+  notes         String?
+  createdById   String?
+  confirmedById String?
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  project     Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy   User?              @relation("ListCreatedBy", fields: [createdById], references: [id])
+  confirmedBy User?              @relation("ListConfirmedBy", fields: [confirmedById], references: [id])
+  items       MaterialListItem[]
+  emails      EmailLog[]
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model MaterialListItem {
+  id           String   @id @default(cuid())
+  listId       String
+  materialId   String
+  requestedQty Float
+  preparedQty  Float    @default(0)
+  unit         String
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  list     MaterialList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  material Material     @relation(fields: [materialId], references: [id])
+
+  @@index([listId])
+  @@index([materialId])
+}
+
+model EmailLog {
+  id        String    @id @default(cuid())
+  listId    String
+  to        String
+  cc        String?
+  subject   String
+  status    String    @default("PENDIENTE")
+  error     String?
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  list MaterialList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@index([listId])
+}
+
+model JobConfig {
+  id        String   @id @default("reminder")
+  enabled   Boolean  @default(true)
+  hour      Int      @default(8)
+  minute    Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model ReminderLog {
+  id           String   @id @default(cuid())
+  sentAt       DateTime @default(now())
+  pendingCount Int
+  details      String?
+}
