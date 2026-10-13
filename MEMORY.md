@@ -11,7 +11,7 @@ aporte.
   listados con barra de comandos y flujo de estados, email automático, recordatorio diario.
 - Datos en SQLite de desarrollo (`apps/api/prisma/dev.db`). Seed: `admin@almacen.local / admin1234`.
 - Email en modo `json` (imprime en consola, **no envía**).
-- Tooling: 10 skills en `.agents/skills/` + `skills-lock.json`; MCP `github` remoto en `~/.config/opencode/opencode.json` (global), pendiente de autenticar.
+- Tooling: 10 skills en `.agents/skills/` (versionadas); MCP `github` remoto global en `~/.config/opencode/opencode.json`, autenticado con PAT.
 
 ## Decisiones (y por qué)
 
@@ -39,6 +39,7 @@ aporte.
 - Descargas/impresión protegidas requieren `downloadFile()` / `openPrintable()`: abrir la URL
   de export en pestaña nueva no lleva el JWT.
 - No hay tests, lint ni CI configurados.
+- OpenCode v2.0.28: `{env:...}` NO se interpola en `headers` de MCP (envía el literal); el token debe ir literal (config con `chmod 600`).
 
 ## Próximos pasos
 
@@ -46,4 +47,3 @@ aporte.
 - Push móvil para el recordatorio diario.
 - Configurar SMTP/proveedor transaccional real y decidir hosting (Postgres gestionado + deploy).
 - Añadir tests y lint (hoy no existen).
-- Decidir si se versionan `.agents/skills/` y `skills-lock.json` (hoy sin commitear).
