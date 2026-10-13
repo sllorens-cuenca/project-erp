@@ -29,8 +29,9 @@ project_erp/
   ```
   (nvm se carga automáticamente en nuevas terminales de login por `.bashrc`.)
 
-- **Base de datos**: en desarrollo se usa **SQLite** (no requiere instalar nada).
-  Para producción se recomienda **PostgreSQL** (ver "Pasar a PostgreSQL").
+- **Base de datos**: **PostgreSQL** gestionado en **Neon** (se usa el mismo
+  motor en desarrollo y en producción). Necesitas la cadena de conexión de tu
+  base de Neon en `apps/api/.env` (ver `DEPLOY.md`).
 
 ## Puesta en marcha
 
@@ -41,8 +42,9 @@ npm install
 # 2. Compilar el paquete compartido (lo necesitan api y web)
 npm run build -w @erp/shared
 
-# 3. Base de datos: crear esquema y datos de ejemplo
-npm run db:migrate      # crea apps/api/dev.db y aplica el esquema
+# 3. Base de datos: aplica las migraciones a Neon y datos de ejemplo
+npm run db:deploy       # aplica las migraciones (crea las tablas)
+npm run db:generate     # genera el cliente Prisma
 npm run db:seed         # admin, materiales, cliente, obra y listado de ejemplo
 
 # 4. Arrancar API y web (en dos terminales)
@@ -111,7 +113,7 @@ Variables relevantes de la API:
 
 | Variable | Descripción |
 |----------|-------------|
-| `DATABASE_URL` | Ruta SQLite o URL de Postgres |
+| `DATABASE_URL` | Cadena de conexión de PostgreSQL (Neon) |
 | `JWT_SECRET` | Clave de firma del token |
 | `MAIL_TRANSPORT` | `json` (no envía, imprime en consola) o `smtp` |
 | `INTERNAL_EMAIL` | Copia interna que recibe listados y recordatorios |
@@ -122,18 +124,23 @@ consola de la API. Para enviar de verdad, pon `smtp` y rellena `SMTP_*`
 (Gmail/Outlook) o adapta `apps/api/src/mail/mail.service.ts` a un proveedor
 transaccional (Resend/SendGrid).
 
-## Pasar a PostgreSQL (producción)
+## Despliegue (producción)
 
-El esquema Prisma evita enums nativos y tipos específicos de SQLite para que la
-migración sea directa:
+La app se publica con **Neon** (PostgreSQL), **Render** (API) y **Vercel**
+(web), y el email real por **Gmail SMTP**. El paso a paso está en
+**[`DEPLOY.md`](./DEPLOY.md)**.
 
-1. En `apps/api/prisma/schema.prisma`, cambia
-   `datasource db { provider = "sqlite" }` por `"postgresql"`.
-2. Ajusta `DATABASE_URL` a tu conexión (Neon/Supabase/RDS…).
-3. Borra `apps/api/prisma/migrations` y regenera:
-   ```bash
-   npm run db:migrate
-   ```
+Resumen:
+
+- **API** en Render (plan free, Frankfurt): `render.yaml` define el build
+  (`@erp/shared` → `prisma generate` → `nest build`) y el arranque
+  (`prisma migrate deploy` + `node apps/api/dist/main.js`).
+- **Web** en Vercel (Root Directory `apps/web`, con `apps/web/vercel.json`).
+- **Base de datos** en Neon: una rama `main` (dev) y otra `production` (prod).
+
+> El plan free de Render **duerme** el servicio y el recordatorio diario puede no
+> dispararse hasta pasar a un plan de pago. Las bases free de Render **se borran
+> a los 30 días**, de ahí que usemos Neon.
 
 ## Roadmap
 
@@ -147,6 +154,8 @@ migración sea directa:
 - [x] **Fase 7** Web UI
 - [x] **Fase 7b** Cierre web: primer arranque (`/setup`), usuarios (ADMIN), perfil
       y cambio de contraseña, historial de movimientos, pulido de UX
+- [x] **Fase 7c** Publicación: Neon (PostgreSQL), API en Render, web en Vercel,
+      email por Gmail SMTP (ver `DEPLOY.md`)
 - [ ] **Fase 8** App iOS (React Native/Expo o SwiftUI) sobre esta API
 - [ ] Push móvil para el recordatorio (cuando exista la app)
 

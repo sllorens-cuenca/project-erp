@@ -1,16 +1,15 @@
 // Esquema Prisma de la app de almacén.
 //
-// Desarrollo: SQLite (no requiere instalar nada).
-// Producción: cambia `provider` a "postgresql" y ajusta DATABASE_URL.
-// El esquema evita enums nativos y tipos específicos de Postgres para que
-// la migración a PostgreSQL sea directa (los enums viven en @erp/shared).
+// Base de datos: PostgreSQL (Neon en la nube, tanto en desarrollo como en
+// producción). El esquema evita enums nativos para que los enums vivan en
+// @erp/shared y no dependan del motor de base de datos.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

@@ -10,9 +10,9 @@ aporte.
   (foco visible, reduced-motion, estados de error). Builds `shared`/`api`/`web` OK; API
   verificada end-to-end (14/14).
 - Publicado en GitHub: `sllorens-cuenca/project-erp` (rama `main`).
-- API NestJS :3001 (prefijo `/api`); web Next.js :3000. Datos SQLite dev
-  (`apps/api/prisma/dev.db`); seed `admin@almacen.local / admin1234`.
-- Email en modo `json` (imprime en consola, **no envía**).
+- API NestJS :3001 (prefijo `/api`); web Next.js :3000. BD **PostgreSQL (Neon)**
+  también en dev; seed `admin@almacen.local / admin1234`.
+- Email en local modo `json` (imprime, **no envía**); en producción **Gmail SMTP**.
 - Tooling: skills en `.agents/skills/`; MCP `github` global (PAT + `X-MCP-Toolsets`);
   `gh` CLI autenticado y como credential helper de git.
 
@@ -20,8 +20,12 @@ aporte.
 
 - Monorepo con `packages/shared`: una sola fuente para enums/tipos de api y web. Las
   etiquetas de rol (`USER_ROLE_LABELS`) van ahí, junto a los demás `*_LABELS`.
-- SQLite en dev y esquema **portable a PostgreSQL** (sin enums nativos ni tipos de
-  Postgres): la máquina no tenía Postgres/Docker/sudo.
+- **PostgreSQL (Neon) en dev y prod** (mismo motor, sin sorpresas); esquema sin enums
+  nativos (viven en `@erp/shared`). Neon porque las BD free de Render **se borran a los
+  30 días** y la máquina no tiene Postgres/Docker local.
+- Publicación: API en **Render free** (Frankfurt), web en **Vercel** (`apps/web`), email
+  **Gmail SMTP** (contraseña de aplicación, sin dominio propio). Render free se duerme:
+  el recordatorio diario no será fiable hasta pasar a un plan de pago.
 - `matches()/normalizeText()` en vez de `contains` de Prisma: SQLite no normaliza acentos.
 - Guards globales (`APP_GUARD`) + `@Public()` / `@Roles()`: seguro por defecto.
 - Estados de listado con efectos en `lists.service.ts` (`CONFIRMADO` descuenta stock,
@@ -36,7 +40,10 @@ aporte.
 - `nest build` con `deleteOutDir` + `incremental`: `tsBuildInfoFile` dentro de `dist/`.
 - Compilar `@erp/shared` antes que api/web (su `main` apunta a `dist/`, no versionado).
 - Cargar nvm en shells no interactivas (si no, `node -v` es v12).
-- Prisma resuelve `file:./dev.db` relativo al schema → BD en `apps/api/prisma/dev.db`.
+- Migración base de Postgres sin BD: `prisma migrate diff --from-empty
+  --to-schema-datamodel prisma/schema.prisma --script` → `migrations/0_init/`.
+- Vercel monorepo: Root Directory `apps/web` + activar "Include source files outside of
+  the Root Directory in the Build Step"; `apps/web/vercel.json` compila `@erp/shared`.
 - Descargas/impresión protegidas: usar `downloadFile()` / `openPrintable()` (llevan JWT).
 - `pkill -f "next dev"` se mata a sí mismo si el patrón está en el propio comando; usar
   el truco del corchete (`"next d[e]v"`).
@@ -44,6 +51,7 @@ aporte.
 
 ## Próximos pasos
 
-- Bloque B: publicar (Postgres gestionado + deploy API/web + SMTP real + CORS).
+- Bloque B **preparado** (código + `render.yaml` + `vercel.json` + `DEPLOY.md`): falta
+  que el usuario cree las cuentas (Neon/Render/Vercel/Gmail con 2FA) y siga `DEPLOY.md`.
 - Bloque C: app iOS sobre la misma API + push del recordatorio diario.
 - Añadir tests y lint (hoy no existen).

@@ -12,6 +12,8 @@
     "dev:web": "npm run dev --workspace @erp/web",
     "build": "npm run build --workspaces --if-present",
     "db:migrate": "npm run prisma:migrate --workspace @erp/api",
+    "db:deploy": "npm run prisma:deploy --workspace @erp/api",
+    "db:generate": "npm run prisma:generate --workspace @erp/api",
     "db:seed": "npm run prisma:seed --workspace @erp/api",
     "db:studio": "npm run prisma:studio --workspace @erp/api"
   },

@@ -1,0 +1,67 @@
+# Blueprint de Render para la API del ERP de almacén.
+#
+# Despliegue: Render → New → Blueprint → seleccionar este repositorio.
+# Render leerá este fichero y creará el servicio web `erp-api` en la región
+# de Frankfurt (UE), plan free.
+#
+# La base de datos NO vive en Render: las bases de datos del plan free de
+# Render se eliminan a los 30 días. Usamos Neon (PostgreSQL gestionado) tanto
+# en desarrollo como en producción. Por eso aquí solo se declara el servicio.
+#
+# Variables con `sync: false` se piden al crear el servicio y no se guardan
+# en el repositorio. `generateValue: true` hace que Render genere un valor
+# aleatorio seguro (JWT_SECRET).
+
+services:
+  - type: web
+    name: erp-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    autoDeploy: true
+    # El monorepo comparte @erp/shared, que hay que compilar antes que la API.
+    buildCommand: npm ci && npm run build -w @erp/shared && npm run prisma:generate -w @erp/api && npm run build -w @erp/api
+    # `migrate deploy` aplica las migraciones pendientes (idempotente) y luego
+    # arranca la API. La primera vez crea todas las tablas.
+    startCommand: npm run prisma:deploy -w @erp/api && node apps/api/dist/main.js
+    healthCheckPath: /api/auth/setup/status
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Autenticación. Render genera un secreto aleatorio en cada creación.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      # Cadena de conexión de Neon (rama `production`). Se rellena al desplegar.
+      - key: DATABASE_URL
+        sync: false
+      # URL de la web en Vercel. Se rellena después de desplegar la web.
+      - key: WEB_ORIGIN
+        sync: false
+      # Email real por SMTP de Gmail (contraseña de aplicación).
+      - key: MAIL_TRANSPORT
+        value: smtp
+      - key: MAIL_FROM
+        sync: false
+      - key: INTERNAL_EMAIL
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      # Recordatorio diario (en el plan free el servicio se duerme, así que
+      # puede no dispararse de forma fiable hasta pasar a un plan de pago).
+      - key: REMINDER_ENABLED
+        value: "true"
+      - key: REMINDER_HOUR
+        value: "8"
+      - key: REMINDER_MINUTE
+        value: "0"
