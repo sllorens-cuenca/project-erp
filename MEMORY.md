@@ -11,7 +11,7 @@ aporte.
   listados con barra de comandos y flujo de estados, email automático, recordatorio diario.
 - Datos en SQLite de desarrollo (`apps/api/prisma/dev.db`). Seed: `admin@almacen.local / admin1234`.
 - Email en modo `json` (imprime en consola, **no envía**).
-- Tooling: 10 skills en `.agents/skills/` (versionadas); MCP `github` remoto global en `~/.config/opencode/opencode.json`, autenticado con PAT.
+- Tooling: 10 skills en `.agents/skills/`; MCP `github` remoto global en `~/.config/opencode/opencode.json` (PAT + `X-MCP-Toolsets: repos,issues,pull_requests`).
 
 ## Decisiones (y por qué)
 
