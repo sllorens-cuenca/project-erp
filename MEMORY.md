@@ -5,7 +5,7 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
 ## Estado actual
 
 - **Bloques A y B hechos**: fase web completa (primer arranque `/setup`, usuarios solo ADMIN,
-  perfil + contraseña, movimientos, pulido UX) y **desplegada**: web
+  perfil + contraseña, movimientos, navbar móvil, pulido UX) y **desplegada**: web
   `project-erp-vercel.vercel.app` (Vercel) + API `erp-api-bojd.onrender.com` (Render) + Neon
   `production`. Primer admin creado (`/setup` → `configured:true`).
 - Dev: API NestJS :3001 (`/api`), web Next.js :3000, Neon rama `main`; seed
@@ -26,6 +26,9 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
   envía email).
 - Credenciales demo del login solo si `NODE_ENV !== 'production'`; `PATCH /api/auth/me`
   reemite el JWT (`name`/`role` van firmados). Node 22 vía nvm.
+- **Navbar móvil** (Opción A): barra inferior fija (Panel·Clientes·Materiales·Listados) + hoja
+  «Más» (resto, perfil y salir) en `components/MobileNav.tsx`; el header de escritorio se
+  mantiene. Iconos **SVG en línea**; `lucide-react` queda como candidato a futuro.
 
 ## Aprendizajes y errores a evitar
 
@@ -41,8 +44,6 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
   interactivas (si no, `node -v` es v12).
 - `nest build` (`deleteOutDir` + `incremental`): `tsBuildInfoFile` dentro de `dist/`.
 - Render build: `npm ci --include=dev` (prisma/@nestjs/cli/typescript son devDependencies).
-- Migración base de Postgres: `prisma migrate diff --from-empty --to-schema-datamodel
-  prisma/schema.prisma --script` → `migrations/0_init/`.
 - Nunca canalizar `prisma migrate deploy` por `head` (SIGPIPE con el advisory lock → P1002);
   usar `tail`; si pasa, `pg_terminate_backend(pid)`.
 - Descargas/impresión protegidas: `downloadFile()` / `openPrintable()` (llevan JWT).
