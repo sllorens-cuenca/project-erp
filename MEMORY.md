@@ -10,11 +10,12 @@ aporte.
   (foco visible, reduced-motion, estados de error). Builds `shared`/`api`/`web` OK; API
   verificada end-to-end (14/14).
 - Publicado en GitHub: `sllorens-cuenca/project-erp` (rama `main`).
-- API NestJS :3001 (prefijo `/api`); web Next.js :3000. BD **PostgreSQL (Neon)**
-  también en dev; seed `admin@almacen.local / admin1234`.
-- Email en local modo `json` (imprime, **no envía**); en producción **Gmail SMTP**.
-- Tooling: skills en `.agents/skills/`; MCP `github` global (PAT + `X-MCP-Toolsets`);
-  `gh` CLI autenticado y como credential helper de git.
+- API NestJS :3001 (`/api`); web Next.js :3000. **Neon** (Postgres) en dev y prod
+  (ramas `main`/`production`); seed `admin@almacen.local / admin1234`.
+- **Verificado en local contra Neon**: build, migración `0_init`, seed, login, CRUD,
+  CORS y recordatorio/email en `json`. Falta desplegar (Render API + Vercel web).
+- Email local `json` (no envía); producción **Gmail SMTP** (contraseña de aplicación).
+- Tooling: skills en `.agents/skills/`; MCP `github` global; `gh` CLI autenticado.
 
 ## Decisiones (y por qué)
 
@@ -45,13 +46,18 @@ aporte.
 - Vercel monorepo: Root Directory `apps/web` + activar "Include source files outside of
   the Root Directory in the Build Step"; `apps/web/vercel.json` compila `@erp/shared`.
 - Descargas/impresión protegidas: usar `downloadFile()` / `openPrintable()` (llevan JWT).
-- `pkill -f "next dev"` se mata a sí mismo si el patrón está en el propio comando; usar
-  el truco del corchete (`"next d[e]v"`).
+- `pkill -f "next dev"` se mata a sí mismo si el patrón está en la propia línea; usar el
+  truco del corchete (`"next d[e]v"`) o matar por PID (`next-server` se llama distinto).
+- Prisma + Neon: la cadena **pooled** (`-pooler`) funcionó (migraciones y consultas); para
+  un proceso persistente es más simple la **directa**. Si el pooler diera errores de
+  *prepared statements*, añadir `?pgbouncer=true`.
+- Render build: usar `npm ci --include=dev` (prisma/@nestjs/cli/typescript son
+  devDependencies y Render fija `NODE_ENV=production`; el build genera y `migrate deploy`).
 - No hay tests, lint ni CI. OpenCode: `{env:...}` no se interpola en `headers` de MCP.
 
 ## Próximos pasos
 
-- Bloque B **preparado** (código + `render.yaml` + `vercel.json` + `DEPLOY.md`): falta
-  que el usuario cree las cuentas (Neon/Render/Vercel/Gmail con 2FA) y siga `DEPLOY.md`.
+- Bloque B: **Neon ✅** y verificación local ✅. Falta **desplegar**: Render (API) y
+  Vercel (web) siguiendo `DEPLOY.md` (el usuario rellena secretos en Render + Gmail).
 - Bloque C: app iOS sobre la misma API + push del recordatorio diario.
 - Añadir tests y lint (hoy no existen).
