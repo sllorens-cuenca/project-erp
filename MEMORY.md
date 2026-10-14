@@ -27,7 +27,7 @@ aporte.
 - Publicación: API en **Render free** (Frankfurt), web en **Vercel** (`apps/web`), email
   **Gmail SMTP** (contraseña de aplicación, sin dominio propio). Render free se duerme:
   el recordatorio diario no será fiable hasta pasar a un plan de pago.
-- `matches()/normalizeText()` en vez de `contains` de Prisma: SQLite no normaliza acentos.
+- Búsquedas con `matches()/normalizeText()` (insensible a acentos y mayúsculas).
 - Guards globales (`APP_GUARD`) + `@Public()` / `@Roles()`: seguro por defecto.
 - Estados de listado con efectos en `lists.service.ts` (`CONFIRMADO` descuenta stock,
   `ENVIADO` envía email).
@@ -48,11 +48,13 @@ aporte.
 - Descargas/impresión protegidas: usar `downloadFile()` / `openPrintable()` (llevan JWT).
 - `pkill -f "next dev"` se mata a sí mismo si el patrón está en la propia línea; usar el
   truco del corchete (`"next d[e]v"`) o matar por PID (`next-server` se llama distinto).
-- Prisma + Neon: la cadena **pooled** (`-pooler`) funcionó (migraciones y consultas); para
-  un proceso persistente es más simple la **directa**. Si el pooler diera errores de
-  *prepared statements*, añadir `?pgbouncer=true`.
-- Render build: usar `npm ci --include=dev` (prisma/@nestjs/cli/typescript son
-  devDependencies y Render fija `NODE_ENV=production`; el build genera y `migrate deploy`).
+- Neon: usar la cadena **directa** (sin `-pooler`) en dev y en Render (proceso
+  persistente). Con la pooled haría falta `?pgbouncer=true` para las *prepared statements*.
+- Render build: `npm ci --include=dev` (prisma/@nestjs/cli/typescript son devDependencies;
+  Render fija `NODE_ENV=production`).
+- Nunca canalizar `prisma migrate deploy` por `head`: el SIGPIPE lo mata con el *advisory
+  lock* cogido y los siguientes intentos dan **P1002**. Usar `tail` o redirigir a fichero;
+  si ocurre, terminar la sesión `idle` con `pg_terminate_backend(pid)`.
 - No hay tests, lint ni CI. OpenCode: `{env:...}` no se interpola en `headers` de MCP.
 
 ## Próximos pasos
