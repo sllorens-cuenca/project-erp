@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { AppShell } from '@/components/AppShell'
+import { Combobox, type ComboOption } from '@/components/Combobox'
 import { EmptyState, ServiceBadge, StatusBadge } from '@/components/ui'
-import { MaterialListStatus } from '@erp/shared'
+import { MATERIAL_UNITS, MaterialListStatus } from '@erp/shared'
 import { apiFetch, downloadFile, openPrintable } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
 
@@ -17,6 +18,15 @@ interface ListItem {
   notes?: string | null
   materialId: string
   material: { id: string; sku: string; name: string; unit: string; stock: number }
+}
+
+interface Material {
+  id: string
+  sku: string
+  name: string
+  category?: string | null
+  unit: string
+  stock: number
 }
 
 interface EmailLog {
@@ -177,11 +187,27 @@ export default function HistorialDetailPage() {
           />
 
           {data.status !== 'ENVIADO' && (
-            <CommandBar
-              listId={id}
-              onDone={() => void reload()}
-              onError={(m) => setError(m)}
-            />
+            <>
+              <AddItemForm
+                listId={id}
+                items={data.items}
+                onDone={() => void reload()}
+                onError={(m) => setError(m)}
+              />
+
+              <details className="mb-4">
+                <summary className="cursor-pointer text-sm text-slate-500 hover:text-slate-700">
+                  Modo rápido: pegar una lista de materiales
+                </summary>
+                <div className="mt-3">
+                  <CommandBar
+                    listId={id}
+                    onDone={() => void reload()}
+                    onError={(m) => setError(m)}
+                  />
+                </div>
+              </details>
+            </>
           )}
 
           <section className="mt-6">
@@ -190,8 +216,7 @@ export default function HistorialDetailPage() {
             </h2>
             {data.items.length === 0 ? (
               <EmptyState>
-                Añade materiales con la barra de comandos o con el botón
-                «Añadir material».
+                Todavía no hay materiales. Añádelos con el buscador de arriba.
               </EmptyState>
             ) : (
               <ItemTable
@@ -294,6 +319,155 @@ function StatusActions({
   )
 }
 
+function AddItemForm({
+  listId,
+  items,
+  onDone,
+  onError,
+}: {
+  listId: string
+  items: ListItem[]
+  onDone: () => void
+  onError: (m: string) => void
+}) {
+  const { data } = useApi<Material[]>('/materials?onlyActive=true')
+  const [query, setQuery] = useState('')
+  const [picked, setPicked] = useState<ComboOption | null>(null)
+  const [qty, setQty] = useState(1)
+  const [unit, setUnit] = useState<string>('UD')
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+
+  /** Catálogo como opciones del buscador (una carga; se ve el stock en la pista). */
+  const options = useMemo<ComboOption[]>(
+    () =>
+      (data ?? []).map((m) => ({
+        id: m.id,
+        label: m.name,
+        hint: [m.sku, m.category, `${m.stock} ${m.unit}`]
+          .filter(Boolean)
+          .join(' · '),
+      })),
+    [data],
+  )
+
+  const material = useMemo(
+    () => (data ?? []).find((m) => m.id === picked?.id) ?? null,
+    [data, picked],
+  )
+
+  const pick = (option: ComboOption | null) => {
+    setPicked(option)
+    setErr(null)
+    setNotice(null)
+    const m = (data ?? []).find((x) => x.id === option?.id)
+    if (m) setUnit(m.unit)
+  }
+
+  const add = async () => {
+    if (!picked) {
+      setErr('Elige un material de la lista.')
+      return
+    }
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setErr('La cantidad debe ser mayor que 0.')
+      return
+    }
+    const label = picked.label
+    const already = items.some((i) => i.materialId === picked.id)
+    setBusy(true)
+    setErr(null)
+    setNotice(null)
+    try {
+      await apiFetch(`/lists/${listId}/items`, {
+        method: 'POST',
+        body: JSON.stringify({
+          materialId: picked.id,
+          requestedQty: qty,
+          unit,
+        }),
+      })
+      setNotice(
+        already
+          ? `«${label}» ya estaba en el registro: se acumuló la cantidad.`
+          : `Añadido: ${qty} ${unit} de «${label}».`,
+      )
+      setPicked(null)
+      setQuery('')
+      setQty(1)
+      onDone()
+    } catch (e) {
+      setErr((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form
+      className="card mb-4"
+      onSubmit={(e) => {
+        e.preventDefault()
+        void add()
+      }}
+    >
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto] sm:items-end">
+        <div>
+          <label className="label">Añadir material</label>
+          <Combobox
+            options={options}
+            query={query}
+            onQueryChange={setQuery}
+            value={picked}
+            onChange={pick}
+            placeholder="Buscar por nombre, SKU o categoría…"
+            emptyText="Ningún material coincide."
+            ariaLabel="Buscar material para añadir"
+          />
+        </div>
+        <div>
+          <label className="label">Cantidad</label>
+          <input
+            className="input"
+            type="number"
+            min={1}
+            step="any"
+            value={qty}
+            onChange={(e) => setQty(Number(e.target.value))}
+          />
+        </div>
+        <div>
+          <label className="label">Unidad</label>
+          <select
+            className="input"
+            value={unit}
+            onChange={(e) => setUnit(e.target.value)}
+          >
+            {MATERIAL_UNITS.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button className="btn-primary" disabled={busy || !picked}>
+          {busy ? 'Añadiendo…' : 'Añadir'}
+        </button>
+      </div>
+
+      {material && qty > material.stock && (
+        <p className="mt-2 text-xs text-amber-600">
+          Stock disponible: {material.stock} {material.unit}. La cantidad pedida
+          es mayor.
+        </p>
+      )}
+      {notice && <p className="mt-2 text-sm text-emerald-600">{notice}</p>}
+      {err && <p className="mt-2 text-sm text-red-600">{err}</p>}
+    </form>
+  )
+}
+
 function CommandBar({
   listId,
   onDone,
@@ -378,19 +552,38 @@ function ItemTable({
   onChanged: () => void
   onError: (m: string) => void
 }) {
+  const [savingId, setSavingId] = useState<string | null>(null)
+  const [savedId, setSavedId] = useState<string | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current)
+    },
+    [],
+  )
+
   const update = async (
     item: ListItem,
     field: 'requestedQty' | 'preparedQty',
     value: number,
   ) => {
+    if (!Number.isFinite(value) || value < 0) return
+    setSavingId(item.id)
+    setSavedId(null)
     try {
       await apiFetch(`/lists/${listId}/items/${item.id}`, {
         method: 'PATCH',
         body: JSON.stringify({ [field]: value }),
       })
       onChanged()
+      setSavedId(item.id)
+      if (timer.current) clearTimeout(timer.current)
+      timer.current = setTimeout(() => setSavedId(null), 1500)
     } catch (err) {
       onError((err as Error).message)
+    } finally {
+      setSavingId(null)
     }
   }
 
@@ -404,28 +597,105 @@ function ItemTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50 text-left text-slate-500">
-          <tr>
-            <th className="px-4 py-2">SKU</th>
-            <th className="px-4 py-2">Material</th>
-            <th className="px-4 py-2 text-right">Pedido</th>
-            <th className="px-4 py-2 text-right">Preparado</th>
-            <th className="px-4 py-2">Ud.</th>
-            <th className="px-4 py-2 text-right">Stock</th>
-            <th className="px-4 py-2"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((it) => (
-            <tr key={it.id} className="border-t border-slate-100">
-              <td className="px-4 py-2 font-mono text-xs">{it.material.sku}</td>
-              <td className="px-4 py-2 font-medium">{it.material.name}</td>
-              <td className="px-4 py-2 text-right">
+    <>
+      {/* Escritorio: tabla. */}
+      <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 text-left text-slate-500">
+            <tr>
+              <th className="px-4 py-2">SKU</th>
+              <th className="px-4 py-2">Material</th>
+              <th className="px-4 py-2 text-right">Pedido</th>
+              <th className="px-4 py-2 text-right">Preparado</th>
+              <th className="px-4 py-2">Ud.</th>
+              <th className="px-4 py-2 text-right">Stock</th>
+              <th className="whitespace-nowrap px-4 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((it) => (
+              <tr key={it.id} className="border-t border-slate-100">
+                <td className="px-4 py-2 font-mono text-xs">{it.material.sku}</td>
+                <td className="px-4 py-2 font-medium">{it.material.name}</td>
+                <td className="px-4 py-2 text-right">
+                  <input
+                    type="number"
+                    className="input w-20 text-right"
+                    defaultValue={it.requestedQty}
+                    disabled={disabled}
+                    onBlur={(e) => {
+                      const v = Number(e.target.value)
+                      if (v !== it.requestedQty) void update(it, 'requestedQty', v)
+                    }}
+                  />
+                </td>
+                <td className="px-4 py-2 text-right">
+                  <input
+                    type="number"
+                    className="input w-20 text-right"
+                    defaultValue={it.preparedQty}
+                    disabled={disabled}
+                    onBlur={(e) => {
+                      const v = Number(e.target.value)
+                      if (v !== it.preparedQty) void update(it, 'preparedQty', v)
+                    }}
+                  />
+                </td>
+                <td className="px-4 py-2 text-slate-500">{it.unit}</td>
+                <td className="px-4 py-2 text-right text-slate-400">
+                  {it.material.stock}
+                </td>
+                <td className="whitespace-nowrap px-4 py-2 text-right">
+                  <span className="mr-3 text-xs text-slate-400">
+                    {savingId === it.id
+                      ? 'Guardando…'
+                      : savedId === it.id
+                        ? 'Guardado ✔'
+                        : ''}
+                  </span>
+                  {!disabled && (
+                    <button
+                      className="text-red-500 hover:underline"
+                      onClick={() => remove(it)}
+                    >
+                      Quitar
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Móvil: una tarjeta por material (la tabla se recortaba con overflow-hidden). */}
+      <ul className="grid gap-2 md:hidden">
+        {items.map((it) => (
+          <li key={it.id} className="card">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-medium">{it.material.name}</p>
+                <p className="truncate text-xs text-slate-400">
+                  <span className="font-mono">{it.material.sku}</span> · stock{' '}
+                  {it.material.stock}
+                </p>
+              </div>
+              {!disabled && (
+                <button
+                  className="shrink-0 text-sm text-red-500 hover:underline"
+                  onClick={() => remove(it)}
+                >
+                  Quitar
+                </button>
+              )}
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <label className="label">Pedido ({it.unit})</label>
                 <input
                   type="number"
-                  className="input w-20 text-right"
+                  className="input"
                   defaultValue={it.requestedQty}
                   disabled={disabled}
                   onBlur={(e) => {
@@ -433,11 +703,12 @@ function ItemTable({
                     if (v !== it.requestedQty) void update(it, 'requestedQty', v)
                   }}
                 />
-              </td>
-              <td className="px-4 py-2 text-right">
+              </div>
+              <div>
+                <label className="label">Preparado ({it.unit})</label>
                 <input
                   type="number"
-                  className="input w-20 text-right"
+                  className="input"
                   defaultValue={it.preparedQty}
                   disabled={disabled}
                   onBlur={(e) => {
@@ -445,25 +716,18 @@ function ItemTable({
                     if (v !== it.preparedQty) void update(it, 'preparedQty', v)
                   }}
                 />
-              </td>
-              <td className="px-4 py-2 text-slate-500">{it.unit}</td>
-              <td className="px-4 py-2 text-right text-slate-400">
-                {it.material.stock}
-              </td>
-              <td className="px-4 py-2 text-right">
-                {!disabled && (
-                  <button
-                    className="text-red-500 hover:underline"
-                    onClick={() => remove(it)}
-                  >
-                    Quitar
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+              {savingId === it.id
+                ? 'Guardando…'
+                : savedId === it.id
+                  ? 'Guardado ✔'
+                  : ''}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </>
   )
 }
