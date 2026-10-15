@@ -13,7 +13,7 @@ interface Client {
   email?: string | null
   phone?: string | null
   address?: string | null
-  _count: { projects: number }
+  _count?: { projects: number }
 }
 
 export default function ClientesPage() {
@@ -75,7 +75,7 @@ export default function ClientesPage() {
                   <td className="px-4 py-2 text-slate-500">
                     {c.phone ?? '—'} · {c.email ?? '—'}
                   </td>
-                  <td className="px-4 py-2">{c._count.projects}</td>
+                  <td className="px-4 py-2">{c._count?.projects ?? 0}</td>
                   <td className="px-4 py-2 text-right">
                     <Link
                       href={`/clientes/${c.id}`}

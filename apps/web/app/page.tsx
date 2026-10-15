@@ -10,7 +10,7 @@ interface ListRow {
   status: string
   createdAt: string
   project: { name: string; serviceType: string; client: { name: string } }
-  _count: { items: number }
+  _count?: { items: number }
 }
 
 interface Material {
@@ -83,7 +83,7 @@ export default function PanelPage() {
                     <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
                       <StatusBadge status={l.status} />
                       <ServiceBadge service={l.project.serviceType} />
-                      <span>{l._count.items} líneas</span>
+                      <span>{l._count?.items ?? 0} líneas</span>
                     </div>
                   </div>
                 </li>

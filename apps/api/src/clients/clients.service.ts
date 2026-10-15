@@ -27,7 +27,11 @@ export class ClientsService {
     const client = await this.prisma.client.findUnique({
       where: { id },
       include: {
-        projects: { orderBy: { createdAt: 'desc' } },
+        // La web cuenta los listados por obra (`_count.lists`) en la ficha del cliente.
+        projects: {
+          orderBy: { createdAt: 'desc' },
+          include: { _count: { select: { lists: true } } },
+        },
       },
     })
     if (!client) throw new NotFoundException('Cliente no encontrado')

@@ -14,7 +14,7 @@ interface ListRow {
   createdAt: string
   projectId: string
   project: { name: string; serviceType: string; client: { name: string } }
-  _count: { items: number }
+  _count?: { items: number }
 }
 
 interface ProjectOption {
@@ -119,7 +119,7 @@ function Listados() {
                   <td className="px-4 py-2">
                     <StatusBadge status={l.status} />
                   </td>
-                  <td className="px-4 py-2 text-right">{l._count.items}</td>
+                  <td className="px-4 py-2 text-right">{l._count?.items ?? 0}</td>
                   <td className="px-4 py-2 text-right">
                     <Link
                       href={`/listados/${l.id}`}

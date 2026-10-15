@@ -14,6 +14,7 @@ import { StockModule } from './stock/stock.module'
 import { ListsModule } from './lists/lists.module'
 import { MailModule } from './mail/mail.module'
 import { RemindersModule } from './reminders/reminders.module'
+import { HealthModule } from './health/health.module'
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { RemindersModule } from './reminders/reminders.module'
     StockModule,
     ListsModule,
     RemindersModule,
+    HealthModule,
   ],
   providers: [
     // Autenticación y roles para toda la app (salvo @Public()).

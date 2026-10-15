@@ -15,7 +15,7 @@ interface Project {
   serviceType: string
   status: string
   address?: string | null
-  _count: { lists: number }
+  _count?: { lists: number }
 }
 
 interface ClientDetail {
@@ -101,7 +101,7 @@ export default function ClientDetailPage() {
                       <p className="text-xs text-slate-500">{p.address}</p>
                     )}
                     <p className="mt-1 text-xs text-slate-400">
-                      {p._count.lists} listado(s) de materiales
+                      {p._count?.lists ?? 0} listado(s) de materiales
                     </p>
                   </div>
                   <Link

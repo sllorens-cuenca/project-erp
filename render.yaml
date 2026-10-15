@@ -23,7 +23,9 @@ services:
     # El monorepo comparte @erp/shared, que hay que compilar antes que la API.
     # `--include=dev` es obligatorio: prisma/@nestjs/cli/typescript viven en
     # devDependencies y Render define NODE_ENV=production en runtime.
-    buildCommand: npm ci --include=dev && npm run build -w @erp/shared && npm run prisma:generate -w @erp/api && npm run build -w @erp/api
+    # `rm -rf apps/api/dist` evita el gotcha de `tsc --incremental`: si el
+    # `.tsbuildinfo` da el build por bueno, no reemite y serviría un dist viejo.
+    buildCommand: npm ci --include=dev && npm run build -w @erp/shared && npm run prisma:generate -w @erp/api && rm -rf apps/api/dist && npm run build -w @erp/api
     # `migrate deploy` aplica las migraciones pendientes (idempotente) y luego
     # arranca la API. La primera vez crea todas las tablas.
     startCommand: npm run prisma:deploy -w @erp/api && node apps/api/dist/main.js
