@@ -4,53 +4,52 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
 
 ## Estado actual
 
-- **Bloques A y B hechos**: fase web completa (primer arranque `/setup`, usuarios solo ADMIN,
-  perfil + contraseña, movimientos, navbar móvil, pulido UX) y **desplegada**: web
-  `project-erp-vercel.vercel.app` (Vercel) + API `erp-api-bojd.onrender.com` (Render) + Neon
-  `production`. Primer admin creado (`/setup` → `configured:true`).
-- Dev: API NestJS :3001 (`/api`), web Next.js :3000, Neon rama `main`; seed
-  `admin@almacen.local / admin1234`. Builds OK; API verificada end-to-end.
-- GitHub `sllorens-cuenca/project-erp` (`main`). Email local `json` (no envía); prod **Gmail
-  SMTP** (contraseña de aplicación). Tooling: skills en `.agents/skills/`; MCP `github`; `gh`.
+- **Bloques A y B**: fase web completa (setup, usuarios ADMIN, perfil/contraseña, movimientos,
+  navbar móvil) y **desplegada**: web `project-erp-vercel.vercel.app` + API
+  `erp-api-bojd.onrender.com` + Neon `production`; primer admin creado. Dev: API :3001, web
+  :3000, rama `main` (seed `admin@almacen.local / admin1234`).
+- GitHub `sllorens-cuenca/project-erp` (`main`). Email prod **Gmail SMTP**, local `json`.
+  Tooling `.agents/skills/`, MCP `github`, `gh`. Node 22 vía nvm (el sistema trae 12).
 
 ## Decisiones (y por qué)
 
-- Monorepo con `packages/shared`: una sola fuente para enums/tipos; las `*_LABELS` viven ahí.
-- **PostgreSQL (Neon) en dev y prod** (mismo motor); esquema sin enums nativos (en shared).
-  Neon porque las BD free de Render **se borran a los 30 días**.
-- API en **Render free** (Frankfurt), web en **Vercel** (`apps/web`); Render free se duerme →
-  recordatorio diario no fiable hasta pagar.
-- Búsquedas con `matches()/normalizeText()` (sin acentos/mayúsculas).
-- Guards globales (`APP_GUARD`) + `@Public()` / `@Roles()`: seguro por defecto.
-- Estados de listado: efectos en `lists.service.ts` (`CONFIRMADO` descuenta stock, `ENVIADO`
-  envía email).
-- Credenciales demo del login solo si `NODE_ENV !== 'production'`; `PATCH /api/auth/me`
-  reemite el JWT (`name`/`role` van firmados). Node 22 vía nvm.
-- **Navbar móvil** (Opción A): barra inferior fija (Panel·Clientes·Materiales·Listados) + hoja
-  «Más» (resto, perfil y salir) en `components/MobileNav.tsx`; el header de escritorio se
-  mantiene. Iconos **SVG en línea**; `lucide-react` queda como candidato a futuro.
+- Monorepo `packages/shared`: única fuente para enums/tipos y las `*_LABELS`.
+- **PostgreSQL (Neon) en dev y prod**, **cadena directa** (sin `-pooler`); sin enums nativos
+  (viven en shared). Neon porque las BD free de Render se borran a los 30 días.
+- API **Render free** (Frankfurt) + web **Vercel**; Render free se duerme → recordatorio
+  diario no fiable hasta pagar.
+- Búsquedas con `matches()/normalizeText()` (sin acentos/mayúsculas); guards globales
+  (`APP_GUARD`) + `@Public()`/`@Roles()`: seguro por defecto.
+- Estados de listado en `lists.service.ts`: `CONFIRMADO` descuenta stock, `ENVIADO` envía
+  email real (SMTP).
+- Credenciales demo solo si `NODE_ENV !== 'production'`; `PATCH /api/auth/me` reemite el JWT.
+- Navbar móvil: barra inferior (Panel·Clientes·Materiales·Listados) + hoja «Más» en
+  `components/MobileNav.tsx`; escritorio intacto. Iconos SVG en línea, **`lucide-react`
+  pendiente como candidato**.
 
 ## Aprendizajes y errores a evitar
 
 - **Vercel**: `NEXT_PUBLIC_API_URL` se incrusta en **build**; si falta, la web usa
   `http://localhost:3001/api` → `NetworkError when attempting to fetch resource`. Hay que
-  **redesplegar** y verificar que no quede `localhost` en el chunk servido.
+  **redesplegar** y comprobar que no quede `localhost` en el chunk servido.
 - **Render/CORS**: `WEB_ORIGIN` = origen exacto de Vercel **sin barra final**; mal formado ⇒
-  sin `access-control-allow-origin` y bloquea todo (incluso localhost). Diagnóstico:
-  `curl -H "Origin: <url>" -D - -o /dev/null <api>/api/auth/setup/status`.
-- Vercel monorepo: Root Directory `apps/web` + "Include source files outside of the Root
-  Directory"; `apps/web/vercel.json` compila `@erp/shared`.
-- Compilar `@erp/shared` antes que api/web (`main` → `dist/`). Cargar nvm en shells no
-  interactivas (si no, `node -v` es v12).
+  sin `access-control-allow-origin` (bloquea todo). Diagnóstico: `curl -H "Origin: <url>"
+  -D - -o /dev/null <api>/api/auth/setup/status`.
+- **Vercel Git**: la conexión apuntaba a un clon suyo y los pushes no llegaban (Settings →
+  Git); cambiarlo no relanza el build, hay que lanzarlo. (El resto de la config de despliegue
+  está en `DEPLOY.md`.)
+- Compilar `@erp/shared` antes que api/web (`main` → `dist/`); nvm en shells no interactivas.
 - `nest build` (`deleteOutDir` + `incremental`): `tsBuildInfoFile` dentro de `dist/`.
-- Render build: `npm ci --include=dev` (prisma/@nestjs/cli/typescript son devDependencies).
-- Nunca canalizar `prisma migrate deploy` por `head` (SIGPIPE con el advisory lock → P1002);
-  usar `tail`; si pasa, `pg_terminate_backend(pid)`.
-- Descargas/impresión protegidas: `downloadFile()` / `openPrintable()` (llevan JWT).
-- `pkill -f "next dev"` se mata a sí mismo; usar corchete (`"next d[e]v"`) o PID.
+- Render build: `npm ci --include=dev` (devDeps con `NODE_ENV=production`).
+- Nunca canalizar `prisma migrate deploy` por `head` (SIGPIPE → **P1002**); usar `tail`.
+- `downloadFile()`/`openPrintable()` llevan el JWT. `pkill -f "next dev"` se mata a sí mismo:
+  usar corchete (`"next d[e]v"`).
 - No hay tests, lint ni CI. OpenCode: `{env:...}` no se interpola en `headers` de MCP.
 
 ## Próximos pasos
 
-- Probar el email real por Gmail; asumir recordatorio diario no fiable con Render free.
-- Bloque C: app iOS sobre la misma API + push del recordatorio. Añadir tests y lint.
+- **Demo en producción**: datos de ejemplo cargados (3 clientes, 2 usuarios, 10 materiales,
+  4 obras, 4 listados). Limpiar con `/tmp/opencode/demo-clean.sh` (IDs en
+  `/tmp/opencode/demo-ids.json`). Navbar móvil ya desplegado; Vercel redespliega solo al
+  hacer push a `main`.
+- Probar email real por Gmail. Bloque C: app iOS + push del recordatorio. Tests y lint.
