@@ -90,7 +90,11 @@ export default function ClientDetailPage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {data.projects.map((p) => (
-                <div key={p.id} className="card flex flex-col justify-between">
+                <Link
+                  key={p.id}
+                  href={`/historial?obra=${p.id}`}
+                  className="card flex flex-col justify-between active:bg-slate-50"
+                >
                   <div>
                     <div className="mb-2 flex items-center gap-2">
                       <ServiceBadge service={p.serviceType} />
@@ -104,13 +108,10 @@ export default function ClientDetailPage() {
                       {p._count?.lists ?? 0} registro(s) de materiales
                     </p>
                   </div>
-                  <Link
-                    href={`/historial?obra=${p.id}`}
-                    className="mt-3 text-sm text-brand-dark hover:underline"
-                  >
+                  <span className="mt-3 text-sm text-brand-dark">
                     Ver historial →
-                  </Link>
-                </div>
+                  </span>
+                </Link>
               ))}
             </div>
           )}

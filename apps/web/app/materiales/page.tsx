@@ -110,58 +110,111 @@ export default function MaterialesPage() {
       ) : materials.length === 0 ? (
         <EmptyState>No hay materiales.</EmptyState>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-slate-500">
-              <tr>
-                <th className="px-4 py-2">SKU</th>
-                <th className="px-4 py-2">Material</th>
-                <th className="px-4 py-2">Categoría</th>
-                <th className="px-4 py-2 text-right">Stock</th>
-                <th className="px-4 py-2 text-right">Mínimo</th>
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {materials.map((m) => {
-                const low = m.stock <= m.minStock
-                return (
-                  <tr key={m.id} className="border-t border-slate-100">
-                    <td className="px-4 py-2 font-mono text-xs">{m.sku}</td>
-                    <td className="px-4 py-2 font-medium">{m.name}</td>
-                    <td className="px-4 py-2 text-slate-500">
-                      {m.category ?? '—'}
-                    </td>
-                    <td
-                      className={`px-4 py-2 text-right ${
-                        low ? 'font-semibold text-red-600' : ''
-                      }`}
-                    >
-                      {m.stock} {m.unit}
-                    </td>
-                    <td className="px-4 py-2 text-right text-slate-400">
-                      {m.minStock} {m.unit}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-right">
-                      <Link
-                        href={`/movimientos?materialId=${m.id}`}
-                        className="text-sm text-slate-500 hover:text-brand-dark hover:underline"
+        <>
+          {/* Escritorio: tabla. */}
+          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-left text-slate-500">
+                <tr>
+                  <th className="px-4 py-2">SKU</th>
+                  <th className="px-4 py-2">Material</th>
+                  <th className="px-4 py-2">Categoría</th>
+                  <th className="px-4 py-2 text-right">Stock</th>
+                  <th className="px-4 py-2 text-right">Mínimo</th>
+                  <th className="px-4 py-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {materials.map((m) => {
+                  const low = m.stock <= m.minStock
+                  return (
+                    <tr key={m.id} className="border-t border-slate-100">
+                      <td className="px-4 py-2 font-mono text-xs">{m.sku}</td>
+                      <td className="px-4 py-2 font-medium">{m.name}</td>
+                      <td className="px-4 py-2 text-slate-500">
+                        {m.category ?? '—'}
+                      </td>
+                      <td
+                        className={`px-4 py-2 text-right ${
+                          low ? 'font-semibold text-red-600' : ''
+                        }`}
                       >
-                        Movimientos
-                      </Link>
+                        {m.stock} {m.unit}
+                      </td>
+                      <td className="px-4 py-2 text-right text-slate-400">
+                        {m.minStock} {m.unit}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-2 text-right">
+                        <Link
+                          href={`/movimientos?materialId=${m.id}`}
+                          className="text-sm text-slate-500 hover:text-brand-dark hover:underline"
+                        >
+                          Movimientos
+                        </Link>
+                        <button
+                          className="btn-secondary ml-3"
+                          onClick={() => setMovementFor(m)}
+                        >
+                          Movimiento
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Móvil: la tarjeta abre el historial de movimientos del material. */}
+          <ul className="grid gap-2 md:hidden">
+            {materials.map((m) => {
+              const low = m.stock <= m.minStock
+              return (
+                <li key={m.id}>
+                  <div className="card">
+                    <Link
+                      href={`/movimientos?materialId=${m.id}`}
+                      className="block active:bg-slate-50"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{m.name}</p>
+                          <p className="truncate text-xs text-slate-400">
+                            <span className="font-mono">{m.sku}</span>
+                            {m.category ? ` · ${m.category}` : ''}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p
+                            className={`text-sm ${
+                              low ? 'font-semibold text-red-600' : ''
+                            }`}
+                          >
+                            {m.stock} {m.unit}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            mín. {m.minStock}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="mt-2 block text-xs text-brand-dark">
+                        Ver movimientos →
+                      </span>
+                    </Link>
+                    <div className="mt-3 border-t border-slate-100 pt-3">
                       <button
-                        className="btn-secondary ml-3"
+                        className="btn-secondary"
                         onClick={() => setMovementFor(m)}
                       >
-                        Movimiento
+                        Registrar movimiento
                       </button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </>
       )}
 
       {movementFor && (
