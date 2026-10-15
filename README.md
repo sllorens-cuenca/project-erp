@@ -1,7 +1,7 @@
 # 📦 App de Almacén (ERP de materiales por obra)
 
 Digitaliza el registro de materiales de almacén vinculados a **clientes** y
-**obras/servicios**, con inventario, listados de preparación con estados, envío
+**obras/servicios**, con inventario, registros de preparación con estados, envío
 automático por email y recordatorio diario.
 
 - **Fase web**: implementada ✅ (Next.js + API NestJS)
@@ -45,7 +45,7 @@ npm run build -w @erp/shared
 # 3. Base de datos: aplica las migraciones a Neon y datos de ejemplo
 npm run db:deploy       # aplica las migraciones (crea las tablas)
 npm run db:generate     # genera el cliente Prisma
-npm run db:seed         # admin, materiales, cliente, obra y listado de ejemplo
+npm run db:seed         # admin, materiales, cliente, obra y registro de ejemplo
 
 # 4. Arrancar API y web (en dos terminales)
 npm run dev:api         # http://localhost:3001/api
@@ -69,12 +69,12 @@ npm run dev:web         # http://localhost:3000
 1. **Clientes y carpetas por obra/servicio** — `Cliente → Obra` con tipo de
    servicio (instalación, reparación, aire acondicionado, otro).
 2. **Entrada de materiales por comandos o botones** — barra de comandos en el
-   listado y botón de movimiento (entrada/salida/ajuste) en materiales.
-3. **Listados de materiales preparados** — con cantidades pedidas/preparadas,
+   registro y botón de movimiento (entrada/salida/ajuste) en materiales.
+3. **Registros de materiales preparados** — con cantidades pedidas/preparadas,
    exportación **CSV** e **impresión/PDF**.
 4. **Envío automático por email** — al confirmar y enviar: va al **email del
    cliente + copia interna** del almacén.
-5. **Recordatorio diario** — correo con los listados pendientes de confirmar,
+5. **Recordatorio diario** — correo con los registros pendientes de confirmar,
    a la hora configurable.
 6. **Usuarios y perfil** — alta, edición y baja lógica de usuarios (solo ADMIN);
    cada usuario edita su perfil y cambia su contraseña.
@@ -93,7 +93,7 @@ tuberia 12/14 5
 - Búsqueda **sin distinguir acentos ni mayúsculas** (`tuberia` → `Tubería 12/14`).
 - Prefijos `/` o `+` son opcionales.
 
-### Flujo de estados de un listado
+### Flujo de estados de un registro
 
 ```
 BORRADOR → EN_PREPARACION → LISTO → CONFIRMADO → ENVIADO
@@ -116,7 +116,7 @@ Variables relevantes de la API:
 | `DATABASE_URL` | Cadena de conexión de PostgreSQL (Neon) |
 | `JWT_SECRET` | Clave de firma del token |
 | `MAIL_TRANSPORT` | `json` (no envía, imprime en consola) o `smtp` |
-| `INTERNAL_EMAIL` | Copia interna que recibe listados y recordatorios |
+| `INTERNAL_EMAIL` | Copia interna que recibe registros y recordatorios |
 | `REMINDER_HOUR` / `REMINDER_MINUTE` | Hora del recordatorio diario |
 
 **Email real**: en desarrollo `MAIL_TRANSPORT=json` imprime los correos en la
@@ -148,7 +148,7 @@ Resumen:
 - [x] **Fase 1** API base (NestJS + Prisma + auth + roles)
 - [x] **Fase 2** Clientes y obras
 - [x] **Fase 3** Catálogo de materiales + inventario
-- [x] **Fase 4** Listados + comandos/botones + estados
+- [x] **Fase 4** Registros + comandos/botones + estados
 - [x] **Fase 5** Export CSV/PDF + email automático
 - [x] **Fase 6** Recordatorio diario (email)
 - [x] **Fase 7** Web UI
@@ -169,11 +169,11 @@ Resumen:
 | Obras | `GET/POST /api/projects`, `GET/PATCH/DELETE /api/projects/:id` |
 | Materiales | `GET/POST /api/materials`, `GET /api/materials/low-stock`, `GET/PATCH/DELETE /api/materials/:id` |
 | Stock | `GET/POST /api/stock-movements` |
-| Listados | `GET/POST /api/lists`, `GET /api/lists/pending`, `GET/PATCH/DELETE /api/lists/:id`, `POST /api/lists/:id/items`, `POST /api/lists/:id/commands`, `PATCH /api/lists/:id/status`, `POST /api/lists/:id/confirm`, `POST /api/lists/:id/send`, `GET /api/lists/:id/export`, `GET /api/lists/:id/document` |
+| Registros | `GET/POST /api/lists`, `GET /api/lists/pending`, `GET/PATCH/DELETE /api/lists/:id`, `POST /api/lists/:id/items`, `POST /api/lists/:id/commands`, `PATCH /api/lists/:id/status`, `POST /api/lists/:id/confirm`, `POST /api/lists/:id/send`, `GET /api/lists/:id/export`, `GET /api/lists/:id/document` |
 | Recordatorios | `GET/PATCH /api/reminders/config`, `GET /api/reminders/history`, `POST /api/reminders/run` |
 
 ## Roles
 
 - **ADMIN**: todo, incluida la gestión de usuarios.
-- **ALMACENERO**: clientes, obras, materiales, listados, envíos.
+- **ALMACENERO**: clientes, obras, materiales, registros, envíos.
 - **TECNICO**: consulta y registro de movimientos de stock.

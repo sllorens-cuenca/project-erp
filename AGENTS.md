@@ -33,12 +33,12 @@ dupliques aquí; este archivo es solo contexto operativo que no es obvio.
 
 ## Prisma / base de datos
 
-- Dev = **SQLite**. `.env` en `apps/api/.env` (`DATABASE_URL="file:./dev.db"`).
-- La BD está en **`apps/api/prisma/dev.db`** (Prisma resuelve rutas SQLite
-  relativas al schema, no al cwd). Los scripts `prisma:*` corren en el workspace api.
+- Dev y prod = **PostgreSQL (Neon)**; `DATABASE_URL` en `apps/api/.env` (cadena directa
+  de Neon, **sin** `-pooler`) y en Render. Esquema `provider = "postgresql"` con las
+  migraciones versionadas en `apps/api/prisma/migrations` (`prisma migrate deploy` en Render).
+  Los scripts `prisma:*` corren en el workspace api.
 - **Sin enums nativos**: los enums viven en `packages/shared/src/enums.ts` y en la
   BD son `String`. Al añadir un valor, edítalo en shared (no en `schema.prisma`).
-- Pasar a PostgreSQL: `provider = "postgresql"` + **borrar `apps/api/prisma/migrations`** y regenerar.
 
 ## Convenciones de la API (`apps/api`)
 
@@ -46,9 +46,10 @@ dupliques aquí; este archivo es solo contexto operativo que no es obvio.
 - **Auth global**: `JwtAuthGuard` + `RolesGuard` se registran con `APP_GUARD`; todo
   endpoint está autenticado por defecto. Usa `@Public()` para abrir y
   `@Roles(UserRole.X)` para restringir.
-- **Búsquedas de texto**: no uses `contains` de Prisma; SQLite no normaliza acentos.
-  Usa `matches()` / `normalizeText()` de `src/common/utils/text.ts`.
-- **Estado de listados**: transiciones y efectos en `src/lists/lists.service.ts`
+- **Búsquedas de texto**: no uses `contains` de Prisma; no normaliza acentos (Postgres
+  `contains` tampoco es insensible a mayúsculas/acentos sin `mode`). Usa `matches()` /
+  `normalizeText()` de `src/common/utils/text.ts`.
+- **Estado de los registros**: transiciones y efectos en `src/lists/lists.service.ts`
   (`TRANSITIONS`). `CONFIRMADO` descuenta stock (movimientos SALIDA en transacción);
   `ENVIADO` envía email. Nunca cambies el estado por SQL/Prisma directo.
 - **Barra de comandos**: parser en `src/lists/command.parser.ts` (cantidad = último
