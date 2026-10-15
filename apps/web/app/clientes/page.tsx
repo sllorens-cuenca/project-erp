@@ -58,37 +58,67 @@ export default function ClientesPage() {
       ) : !clients || clients.length === 0 ? (
         <EmptyState>No hay clientes todavía.</EmptyState>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-slate-500">
-              <tr>
-                <th className="px-4 py-2">Cliente</th>
-                <th className="px-4 py-2">Contacto</th>
-                <th className="px-4 py-2">Obras</th>
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map((c) => (
-                <tr key={c.id} className="border-t border-slate-100">
-                  <td className="px-4 py-2 font-medium">{c.name}</td>
-                  <td className="px-4 py-2 text-slate-500">
-                    {c.phone ?? '—'} · {c.email ?? '—'}
-                  </td>
-                  <td className="px-4 py-2">{c._count?.projects ?? 0}</td>
-                  <td className="px-4 py-2 text-right">
-                    <Link
-                      href={`/clientes/${c.id}`}
-                      className="text-brand-dark hover:underline"
-                    >
-                      Abrir carpeta →
-                    </Link>
-                  </td>
+        <>
+          {/* Escritorio: tabla (el scroll horizontal solo afecta a pantallas grandes). */}
+          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-left text-slate-500">
+                <tr>
+                  <th className="px-4 py-2">Cliente</th>
+                  <th className="px-4 py-2">Contacto</th>
+                  <th className="px-4 py-2">Obras</th>
+                  <th className="px-4 py-2"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {clients.map((c) => (
+                  <tr key={c.id} className="border-t border-slate-100">
+                    <td className="px-4 py-2 font-medium">{c.name}</td>
+                    <td className="px-4 py-2 text-slate-500">
+                      {c.phone ?? '—'} · {c.email ?? '—'}
+                    </td>
+                    <td className="px-4 py-2">{c._count?.projects ?? 0}</td>
+                    <td className="px-4 py-2 text-right">
+                      <Link
+                        href={`/clientes/${c.id}`}
+                        className="text-brand-dark hover:underline"
+                      >
+                        Abrir carpeta →
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Móvil: la tarjeta entera abre la carpeta del cliente. */}
+          <ul className="grid gap-2 md:hidden">
+            {clients.map((c) => (
+              <li key={c.id}>
+                <Link
+                  href={`/clientes/${c.id}`}
+                  className="card flex items-center justify-between gap-3 active:bg-slate-50"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{c.name}</p>
+                    <p className="truncate text-xs text-slate-500">
+                      {c.phone ?? '—'} · {c.email ?? '—'}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="badge bg-slate-100 text-slate-600">
+                      {c._count?.projects ?? 0} obra(s)
+                    </span>
+                    <span aria-hidden className="text-slate-400">
+                      ›
+                    </span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </AppShell>
   )
