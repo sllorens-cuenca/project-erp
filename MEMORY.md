@@ -6,11 +6,12 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
 
 - Fase web **desplegada**: web `project-erp-vercel.vercel.app` (Vercel) + API
   `erp-api-bojd.onrender.com` (Render free) + Neon `production`. Dev: API :3001, web :3000.
-- Últimos cambios (`main`): «Listados» → **«Historial»** (`/historial` + redirect 308);
-  tarjetas en móvil (Clientes, Historial, Materiales, Movimientos y carpetas de obra);
-  buscador con sugerencias en Clientes, Materiales y «+ Nuevo registro»; y los textos de la API
-  (PDF, correos, errores, nota de movimiento) pasan a decir «registro».
-  **⏳ Pendiente de desplegar en Render**: los textos nuevos de la API (el push no lo disparó).
+- Últimos cambios (`main`): «Listados» → **«Historial»** (`/historial` + redirect 308); tarjetas
+  en móvil (Clientes, Historial, Materiales, Movimientos, carpetas de obra y la tabla de
+  materiales del registro); buscador con sugerencias en Clientes, Materiales y «+ Nuevo
+  registro»; y **selector con autocompletado** para añadir materiales a un registro (la antigua
+  barra de comandos queda plegada en «Modo rápido»). Los textos de la API ya dicen «registro»
+  y **están desplegados en Render** (verificado).
 - GitHub `sllorens-cuenca/project-erp` (`main`). Email prod **Gmail SMTP**, local `json`.
   Tooling `.agents/skills/`, MCP `github`, `gh`. Node 22 vía nvm (el sistema trae 12).
 - **Demo en producción**: 4 clientes, 4 obras, 10 materiales, 4 registros y usuarios demo;
@@ -33,11 +34,14 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
 - Navbar móvil: barra inferior (Panel·Clientes·Materiales·**Historial**) + hoja «Más»;
   iconos SVG en línea (`lucide-react` sigue pendiente) — `components/MobileNav.tsx`.
 - Móvil: patrón **tarjetas** (tabla `hidden md:block` + lista `md:hidden`) en Clientes, Historial,
-  Materiales, Movimientos y carpetas de obra. Clicables salvo en Movimientos (no hay destino; y
-  navegar a la misma ruta no reinicializa el filtro, así que el clic no haría nada visible).
+  Materiales, Movimientos, carpetas de obra y la tabla de materiales del registro (ahí no son
+  enlaces: llevan los campos editables). Clicables salvo en Movimientos (no hay destino).
 - `components/Combobox.tsx`: buscador controlado por el padre, filtra **en memoria** con
   `normalizeText` (una carga por pantalla, sin petición por tecla); `searchText` para campos
   extra. `/projects` no admite `?search=`.
+- **Añadir materiales a un registro**: `AddItemForm` = `Combobox` sobre `/materials?onlyActive=true`
+  (+ cantidad y unidad; la pista muestra stock) → `POST /lists/:id/items`. Avisa si el material ya
+  estaba (la API **acumula** la cantidad) o si pides más que el stock. Sin cambios de API.
 - Credenciales demo solo si `NODE_ENV !== 'production'`; `PATCH /api/auth/me` reemite el JWT.
 - `GET /api/health` (público) devuelve `{ ok, commit, uptimeSeconds, timestamp }` con el commit
   de `RENDER_GIT_COMMIT` (null en local) → sirve para ver qué código corre en prod.
@@ -57,16 +61,17 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
 - Compilar `@erp/shared` antes que api/web (`main` → `dist/`); nvm en shells no interactivas.
 - Render build: `npm ci --include=dev` (devDeps con `NODE_ENV=production`) + `rm -rf` dist.
 - Nunca canalizar `prisma migrate deploy` por `head` (SIGPIPE → **P1002**); usar `tail`.
-- `downloadFile()`/`openPrintable()` llevan el JWT. `pkill -f "next dev"` se mata a sí mismo:
-  usar corchete (`"next d[e]v"`).
-- Páginas **client-side**: el HTML estático solo trae «Cargando», no sirve para revisar UI.
+- `downloadFile()`/`openPrintable()` llevan el JWT (abrir la URL a mano no). `pkill -f "next d[e]v"`.
+- `overflow-hidden` **recorta** la tabla en móvil (no se llegaba a «Quitar»): usar `overflow-x-auto`
+  o tarjetas. Páginas **client-side**: el HTML estático solo dice «Cargando».
+- **Verificar Vercel**: descargar el chunk servido (`chunks/app/…/page-*.js`) y buscar un texto
+  nuevo; el minificador escapa los acentos como `\xNN`, así que conviene buscar en ASCII.
 - `redirects()` de Next: `permanent:true` = **308**; conserva la query (`?obra=…`).
 - No hay tests, lint ni CI (tampoco script `typecheck`: `nest build` ya valida tipos).
 
 ## Próximos pasos
 
 - Demo en producción: datos borrables ya cargados; limpiar con `/tmp/opencode/demo-clean.sh`.
-- **Desplegar la API en Render a mano** (Manual Deploy → Clear build cache) y comprobar con
-  `GET /api/lists/:id/document` (hoy aún dice «Listado de materiales preparados») y con el
-  `Content-Disposition` del CSV (`registro-<id>.csv`). La nota de movimiento nueva ya dice
-  «Preparación del registro …»; las antiguas conservan «listado».
+- **Render no autodespliega**: tras cada push a `main` que toque la API, Manual Deploy →
+  Clear build cache, y verificar `/api/health` (commit). Ya está desplegado el renombrado a
+  «registro» (`GET /api/lists/:id/document` y CSV `registro-<id>.csv`).
