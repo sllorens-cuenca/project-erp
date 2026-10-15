@@ -70,11 +70,11 @@ export class RemindersService implements OnModuleInit {
     await this.run()
   }
 
-  /** Envía el recordatorio diario con los listados pendientes de confirmar. */
+  /** Envía el recordatorio diario con los registros pendientes de confirmar. */
   async run() {
     const pending = await this.lists.findPendingConfirmation()
     const to = process.env.INTERNAL_EMAIL
-    const subject = `Recordatorio de almacén: ${pending.length} listado(s) por confirmar`
+    const subject = `Recordatorio de almacén: ${pending.length} registro(s) por confirmar`
 
     const rows = pending
       .map((l) => {
@@ -96,8 +96,8 @@ export class RemindersService implements OnModuleInit {
       <h2>Recordatorio diario de almacén</h2>
       ${
         pending.length === 0
-          ? '<p>No hay listados pendientes de confirmar. ¡Todo al día! ✅</p>'
-          : `<p>Tienes <b>${pending.length}</b> listado(s) pendientes de verificar y confirmar:</p><ul>${rows}</ul>`
+          ? '<p>No hay registros pendientes de confirmar. ¡Todo al día! ✅</p>'
+          : `<p>Tienes <b>${pending.length}</b> registro(s) pendientes de verificar y confirmar:</p><ul>${rows}</ul>`
       }
     </body></html>`
 

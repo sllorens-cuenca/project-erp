@@ -68,11 +68,11 @@ export class ListsService {
       where: { id },
       include: listInclude,
     })
-    if (!list) throw new NotFoundException('Listado no encontrado')
+    if (!list) throw new NotFoundException('Registro no encontrado')
     return list
   }
 
-  /** Listados pendientes de confirmar (para el recordatorio diario). */
+  /** Registros pendientes de confirmar (para el recordatorio diario). */
   findPendingConfirmation() {
     return this.prisma.materialList.findMany({
       where: {
@@ -123,13 +123,13 @@ export class ListsService {
   async addItem(listId: string, dto: AddItemDto) {
     const list = await this.findOne(listId)
     if (list.status === MaterialListStatus.ENVIADO) {
-      throw new BadRequestException('El listado ya fue enviado')
+      throw new BadRequestException('El registro ya fue enviado')
     }
 
     const { material, unit } = await this.resolveMaterial(dto)
     const qty = dto.requestedQty ?? 1
 
-    // Si el material ya está en el listado, se acumula la cantidad.
+    // Si el material ya está en el registro, se acumula la cantidad.
     const existing = list.items.find((i) => i.materialId === material.id)
     if (existing) {
       await this.prisma.materialListItem.update({
@@ -169,7 +169,7 @@ export class ListsService {
     return this.findOne(listId)
   }
 
-  /** Ejecuta la barra de comandos sobre un listado. */
+  /** Ejecuta la barra de comandos sobre un registro. */
   async runCommands(listId: string, text: string) {
     await this.findOne(listId)
     const { parsed, errors } = parseCommands(text)
@@ -236,7 +236,7 @@ export class ListsService {
 
   /**
    * Confirma la preparación: fija las cantidades preparadas, descuenta el
-   * stock de los materiales en una transacción y marca el listado.
+   * stock de los materiales en una transacción y marca el registro.
    */
   async confirm(id: string, user?: { id: string }) {
     const list = await this.findOne(id)
@@ -246,7 +246,7 @@ export class ListsService {
       current !== MaterialListStatus.CONFIRMADO
     ) {
       throw new BadRequestException(
-        'Solo se puede confirmar un listado en estado LISTO',
+        'Solo se puede confirmar un registro en estado LISTO',
       )
     }
     if (current === MaterialListStatus.CONFIRMADO) return list
@@ -272,7 +272,7 @@ export class ListsService {
             userId: user?.id,
             type: StockMovementType.SALIDA,
             quantity: qty,
-            notes: `Preparación del listado ${list.id}`,
+            notes: `Preparación del registro ${list.id}`,
           },
         })
         await tx.material.update({
@@ -293,13 +293,13 @@ export class ListsService {
     return this.findOne(id)
   }
 
-  /** Envía el listado por email al cliente + copia interna y lo marca enviado. */
+  /** Envía el registro por email al cliente + copia interna y lo marca enviado. */
   async send(id: string, user?: { id: string }) {
     const list = await this.findOne(id)
     const current = list.status as MaterialListStatus
     if (current !== MaterialListStatus.CONFIRMADO) {
       throw new BadRequestException(
-        'El listado debe estar CONFIRMADO antes de enviarse',
+        'El registro debe estar CONFIRMADO antes de enviarse',
       )
     }
 

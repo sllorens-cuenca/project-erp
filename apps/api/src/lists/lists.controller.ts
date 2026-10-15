@@ -138,7 +138,7 @@ export class ListsController {
     res.setHeader('Content-Type', types[format])
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="listado-${id}.${ext}"`,
+      `attachment; filename="registro-${id}.${ext}"`,
     )
     res.send(content)
   }

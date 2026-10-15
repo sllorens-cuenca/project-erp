@@ -36,7 +36,7 @@ const fmtNum = (n: number) =>
   new Intl.NumberFormat('es-ES', { maximumFractionDigits: 3 }).format(n)
 
 export function buildSubject(data: ListDocumentData): string {
-  return `Listado de materiales — ${data.clientName} / ${data.projectName}`
+  return `Registro de materiales — ${data.clientName} / ${data.projectName}`
 }
 
 export function buildHtml(data: ListDocumentData): string {
@@ -57,7 +57,7 @@ export function buildHtml(data: ListDocumentData): string {
   return `<!doctype html>
 <html lang="es">
 <body style="font-family: Arial, Helvetica, sans-serif; color:#1f2937">
-  <h2 style="margin:0 0 4px">Listado de materiales preparados</h2>
+  <h2 style="margin:0 0 4px">Registro de materiales preparados</h2>
   <p style="margin:0 0 16px; color:#6b7280">
     ${escapeHtml(data.clientName)} · ${escapeHtml(data.projectName)}
     (${escapeHtml(
@@ -100,7 +100,7 @@ export function buildText(data: ListDocumentData): string {
       }`,
   )
   return [
-    `Listado de materiales — ${data.clientName} / ${data.projectName}`,
+    `Registro de materiales — ${data.clientName} / ${data.projectName}`,
     '',
     ...lines,
     '',
