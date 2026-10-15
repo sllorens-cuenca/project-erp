@@ -13,7 +13,7 @@ export interface NavItem {
 }
 
 /** Secciones que caben en la barra inferior; el resto van a la hoja «Más». */
-const BOTTOM_HREFS = ['/', '/clientes', '/materiales', '/listados']
+const BOTTOM_HREFS = ['/', '/clientes', '/materiales', '/historial']
 
 type IconProps = { className?: string }
 
@@ -59,13 +59,12 @@ function IconMateriales({ className }: IconProps) {
   )
 }
 
-function IconListados({ className }: IconProps) {
+function IconHistorial({ className }: IconProps) {
   return (
     <svg {...svgProps} className={className}>
-      <rect x="8" y="2" width="8" height="4" rx="1" />
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-      <path d="M9 12h6" />
-      <path d="M9 16h6" />
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M12 7v5l4 2" />
     </svg>
   )
 }
@@ -120,7 +119,7 @@ const ICONS: Record<string, (props: IconProps) => ReactElement> = {
   '/': IconPanel,
   '/clientes': IconClientes,
   '/materiales': IconMateriales,
-  '/listados': IconListados,
+  '/historial': IconHistorial,
   '/movimientos': IconMovimientos,
   '/recordatorios': IconRecordatorios,
   '/usuarios': IconUsuarios,

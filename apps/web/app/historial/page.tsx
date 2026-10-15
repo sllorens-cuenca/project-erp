@@ -24,17 +24,17 @@ interface ProjectOption {
   client: { id: string; name: string }
 }
 
-export default function ListadosPage() {
+export default function HistorialPage() {
   return (
     <AppShell>
       <Suspense fallback={<p className="text-sm text-slate-500">Cargando…</p>}>
-        <Listados />
+        <Historial />
       </Suspense>
     </AppShell>
   )
 }
 
-function Listados() {
+function Historial() {
   const params = useSearchParams()
   const obra = params.get('obra') ?? ''
   const [status, setStatus] = useState('')
@@ -53,9 +53,9 @@ function Listados() {
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Listados de materiales</h1>
+        <h1 className="text-2xl font-semibold">Historial de materiales</h1>
         <button className="btn-primary" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? 'Cancelar' : '+ Nuevo listado'}
+          {showForm ? 'Cancelar' : '+ Nuevo registro'}
         </button>
       </div>
 
@@ -88,7 +88,7 @@ function Listados() {
       ) : loading ? (
         <p className="text-sm text-slate-500">Cargando…</p>
       ) : !data || data.length === 0 ? (
-        <EmptyState>No hay listados con estos filtros.</EmptyState>
+        <EmptyState>No hay registros con estos filtros.</EmptyState>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
@@ -106,7 +106,7 @@ function Listados() {
                 <tr key={l.id} className="border-t border-slate-100">
                   <td className="px-4 py-2">
                     <Link
-                      href={`/listados/${l.id}`}
+                      href={`/historial/${l.id}`}
                       className="font-medium text-brand-dark hover:underline"
                     >
                       {l.project.client.name}
@@ -122,7 +122,7 @@ function Listados() {
                   <td className="px-4 py-2 text-right">{l._count?.items ?? 0}</td>
                   <td className="px-4 py-2 text-right">
                     <Link
-                      href={`/listados/${l.id}`}
+                      href={`/historial/${l.id}`}
                       className="text-brand-dark hover:underline"
                     >
                       Abrir →
@@ -191,7 +191,7 @@ function NewListForm({ onCreated }: { onCreated: () => void }) {
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div>
         <button className="btn-primary" disabled={saving || !projectId}>
-          {saving ? 'Creando…' : 'Crear listado'}
+          {saving ? 'Creando…' : 'Crear registro'}
         </button>
       </div>
     </form>

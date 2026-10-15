@@ -101,14 +101,14 @@ export default function ClientDetailPage() {
                       <p className="text-xs text-slate-500">{p.address}</p>
                     )}
                     <p className="mt-1 text-xs text-slate-400">
-                      {p._count?.lists ?? 0} listado(s) de materiales
+                      {p._count?.lists ?? 0} registro(s) de materiales
                     </p>
                   </div>
                   <Link
-                    href={`/listados?obra=${p.id}`}
+                    href={`/historial?obra=${p.id}`}
                     className="mt-3 text-sm text-brand-dark hover:underline"
                   >
-                    Ver listados →
+                    Ver historial →
                   </Link>
                 </div>
               ))}

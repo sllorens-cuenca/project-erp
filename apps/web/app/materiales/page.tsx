@@ -103,7 +103,7 @@ export default function MaterialesPage() {
                         href={`/movimientos?materialId=${m.id}`}
                         className="text-sm text-slate-500 hover:text-brand-dark hover:underline"
                       >
-                        Historial
+                        Movimientos
                       </Link>
                       <button
                         className="btn-secondary ml-3"

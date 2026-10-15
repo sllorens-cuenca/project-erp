@@ -91,7 +91,7 @@ export default function RecordatoriosPage() {
 
       <div className="card mb-8 max-w-lg">
         <p className="mb-4 text-sm text-slate-500">
-          Cada día, a la hora indicada, se envía un correo con los listados
+          Cada día, a la hora indicada, se envía un correo con los registros
           pendientes de verificar y confirmar (copia interna del almacén).
         </p>
 

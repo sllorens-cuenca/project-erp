@@ -52,7 +52,7 @@ interface CommandResult {
   errors: string[]
 }
 
-export default function ListDetailPage() {
+export default function HistorialDetailPage() {
   const params = useParams<{ id: string }>()
   const id = params.id
   const { data, loading, reload } = useApi<ListDetail>(
@@ -96,19 +96,19 @@ export default function ListDetailPage() {
   const send = () =>
     run(
       () => apiFetch(`/lists/${id}/send`, { method: 'POST' }),
-      'Listado enviado por correo (cliente + copia interna).',
+      'Registro enviado por correo (cliente + copia interna).',
     )
 
   return (
     <AppShell>
-      <Link href="/listados" className="text-sm text-slate-500 hover:underline">
-        ← Listados
+      <Link href="/historial" className="text-sm text-slate-500 hover:underline">
+        ← Historial
       </Link>
 
       {loading ? (
         <p className="mt-4 text-sm text-slate-500">Cargando…</p>
       ) : !data ? (
-        <EmptyState>Listado no encontrado.</EmptyState>
+        <EmptyState>Registro no encontrado.</EmptyState>
       ) : (
         <>
           <div className="mb-4 mt-2 flex flex-wrap items-start justify-between gap-3">
@@ -146,7 +146,7 @@ export default function ListDetailPage() {
                 className="btn-secondary"
                 disabled={busy}
                 onClick={() =>
-                  downloadFile(`/lists/${id}/export?format=csv`, `listado.csv`).catch(
+                  downloadFile(`/lists/${id}/export?format=csv`, `registro.csv`).catch(
                     (e) => setError((e as Error).message),
                   )
                 }
@@ -207,7 +207,7 @@ export default function ListDetailPage() {
           {data.emails.length > 0 && (
             <section className="mt-8">
               <h2 className="mb-3 font-medium text-slate-700">
-                Historial de envíos
+                Envíos
               </h2>
               <ul className="space-y-2">
                 {data.emails.map((e) => (
@@ -287,7 +287,7 @@ function StatusActions({
       )}
       {status === MaterialListStatus.ENVIADO && (
         <span className="badge bg-brand-light text-brand-dark">
-          Listado enviado ✔
+          Enviado al cliente ✔
         </span>
       )}
     </div>

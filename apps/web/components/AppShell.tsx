@@ -11,7 +11,7 @@ const NAV: NavItem[] = [
   { href: '/', label: 'Panel' },
   { href: '/clientes', label: 'Clientes' },
   { href: '/materiales', label: 'Materiales' },
-  { href: '/listados', label: 'Listados' },
+  { href: '/historial', label: 'Historial' },
   { href: '/movimientos', label: 'Movimientos' },
   { href: '/recordatorios', label: 'Recordatorios' },
   { href: '/usuarios', label: 'Usuarios', role: 'ADMIN' },

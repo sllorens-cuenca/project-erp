@@ -41,10 +41,10 @@ export default function PanelPage() {
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <StatCard
-          label="Listados por confirmar"
+          label="Pendientes de confirmar"
           value={pending.data?.length ?? '—'}
           tone="amber"
-          href="/listados"
+          href="/historial"
         />
         <StatCard
           label="Materiales bajo mínimo"
@@ -53,10 +53,10 @@ export default function PanelPage() {
           href="/materiales"
         />
         <StatCard
-          label="Listados totales"
+          label="Registros totales"
           value={recent.data?.length ?? '—'}
           tone="brand"
-          href="/listados"
+          href="/historial"
         />
       </div>
 
@@ -68,14 +68,14 @@ export default function PanelPage() {
           {pending.loading ? (
             <p className="text-sm text-slate-500">Cargando…</p>
           ) : !pending.data || pending.data.length === 0 ? (
-            <EmptyState>¡Todo al día! No hay listados pendientes. ✅</EmptyState>
+            <EmptyState>¡Todo al día! No hay registros pendientes. ✅</EmptyState>
           ) : (
             <ul className="space-y-2">
               {pending.data.map((l) => (
                 <li key={l.id} className="card flex items-center justify-between">
                   <div>
                     <Link
-                      href={`/listados/${l.id}`}
+                      href={`/historial/${l.id}`}
                       className="font-medium text-brand-dark hover:underline"
                     >
                       {l.project.client.name} · {l.project.name}
