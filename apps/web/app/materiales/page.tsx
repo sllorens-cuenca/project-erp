@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { AppShell } from '@/components/AppShell'
+import { Combobox, normalizeText, type ComboOption } from '@/components/Combobox'
 import { EmptyState, ErrorState } from '@/components/ui'
 import {
   MATERIAL_UNITS,
@@ -25,12 +26,32 @@ interface Material {
 
 export default function MaterialesPage() {
   const [search, setSearch] = useState('')
-  const { data, loading, reload, error } = useApi<Material[]>(
-    search
-      ? `/materials?search=${encodeURIComponent(search)}`
-      : '/materials',
-    [search],
+  const [picked, setPicked] = useState<ComboOption | null>(null)
+  const { data, loading, reload, error } = useApi<Material[]>('/materials')
+
+  /** Materiales como opciones del buscador (una carga, filtrado en memoria). */
+  const options = useMemo<ComboOption[]>(
+    () =>
+      (data ?? []).map((m) => ({
+        id: m.id,
+        label: m.name,
+        hint: [m.sku, m.category].filter(Boolean).join(' · ') || undefined,
+      })),
+    [data],
   )
+
+  const activo =
+    picked && normalizeText(search) === normalizeText(picked.label) ? picked : null
+
+  const materials = useMemo(() => {
+    const list = data ?? []
+    if (activo) return list.filter((m) => m.id === activo.id)
+    const q = normalizeText(search)
+    if (!q) return list
+    return list.filter((m) =>
+      normalizeText(`${m.name} ${m.sku} ${m.category ?? ''}`).includes(q),
+    )
+  }, [data, activo, search])
   const [showForm, setShowForm] = useState(false)
   const [movementFor, setMovementFor] = useState<Material | null>(null)
 
@@ -52,18 +73,41 @@ export default function MaterialesPage() {
         />
       )}
 
-      <input
-        className="input mb-4 max-w-sm"
-        placeholder="Buscar material (nombre, SKU, categoría)…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <div className="mb-4 max-w-sm">
+        <Combobox
+          options={options}
+          query={search}
+          onQueryChange={setSearch}
+          value={picked}
+          onChange={setPicked}
+          placeholder="Buscar material (nombre, SKU, categoría)…"
+          emptyText="Ningún material coincide."
+          ariaLabel="Buscar materiales"
+        />
+        {activo && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-medium text-brand-dark">
+              {activo.label}
+            </span>
+            <button
+              type="button"
+              className="text-xs text-slate-500 hover:text-slate-700 hover:underline"
+              onClick={() => {
+                setPicked(null)
+                setSearch('')
+              }}
+            >
+              Quitar filtro
+            </button>
+          </div>
+        )}
+      </div>
 
       {error ? (
         <ErrorState>{error}</ErrorState>
       ) : loading ? (
         <p className="text-sm text-slate-500">Cargando…</p>
-      ) : !data || data.length === 0 ? (
+      ) : materials.length === 0 ? (
         <EmptyState>No hay materiales.</EmptyState>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -79,7 +123,7 @@ export default function MaterialesPage() {
               </tr>
             </thead>
             <tbody>
-              {data.map((m) => {
+              {materials.map((m) => {
                 const low = m.stock <= m.minStock
                 return (
                   <tr key={m.id} className="border-t border-slate-100">

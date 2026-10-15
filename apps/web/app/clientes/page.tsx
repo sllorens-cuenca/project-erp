@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { AppShell } from '@/components/AppShell'
+import { Combobox, normalizeText, type ComboOption } from '@/components/Combobox'
 import { EmptyState, ErrorState } from '@/components/ui'
 import { apiFetch } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
@@ -20,11 +21,32 @@ export default function ClientesPage() {
   const { data, loading, reload, error } = useApi<Client[]>('/clients')
   const [showForm, setShowForm] = useState(false)
   const [search, setSearch] = useState('')
-  const { data: filtered } = useApi<Client[]>(
-    search ? `/clients?search=${encodeURIComponent(search)}` : '/clients',
-    [search],
+  const [picked, setPicked] = useState<ComboOption | null>(null)
+
+  /** Clientes como opciones del buscador: una sola carga, filtrado en memoria. */
+  const options = useMemo<ComboOption[]>(
+    () =>
+      (data ?? []).map((c) => ({
+        id: c.id,
+        label: c.name,
+        hint: [c.phone, c.email].filter(Boolean).join(' · ') || undefined,
+      })),
+    [data],
   )
-  const clients = search ? filtered : data
+
+  /** Solo cuenta como «fijado» si el texto del buscador es el de la opción. */
+  const activo =
+    picked && normalizeText(search) === normalizeText(picked.label) ? picked : null
+
+  const clients = useMemo(() => {
+    const list = data ?? []
+    if (activo) return list.filter((c) => c.id === activo.id)
+    const q = normalizeText(search)
+    if (!q) return list
+    return list.filter((c) =>
+      normalizeText(`${c.name} ${c.phone ?? ''} ${c.email ?? ''}`).includes(q),
+    )
+  }, [data, activo, search])
 
   return (
     <AppShell>
@@ -44,12 +66,35 @@ export default function ClientesPage() {
         />
       )}
 
-      <input
-        className="input mb-4 max-w-sm"
-        placeholder="Buscar por nombre, teléfono o email…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <div className="mb-4 max-w-sm">
+        <Combobox
+          options={options}
+          query={search}
+          onQueryChange={setSearch}
+          value={picked}
+          onChange={setPicked}
+          placeholder="Buscar por nombre, teléfono o email…"
+          emptyText="Ningún cliente coincide."
+          ariaLabel="Buscar clientes"
+        />
+        {activo && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-medium text-brand-dark">
+              {activo.label}
+            </span>
+            <button
+              type="button"
+              className="text-xs text-slate-500 hover:text-slate-700 hover:underline"
+              onClick={() => {
+                setPicked(null)
+                setSearch('')
+              }}
+            >
+              Quitar filtro
+            </button>
+          </div>
+        )}
+      </div>
 
       {error ? (
         <ErrorState>{error}</ErrorState>

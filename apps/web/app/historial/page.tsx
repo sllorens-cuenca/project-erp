@@ -1,9 +1,10 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { AppShell } from '@/components/AppShell'
+import { Combobox, type ComboOption } from '@/components/Combobox'
 import { EmptyState, ErrorState, ServiceBadge, StatusBadge } from '@/components/ui'
 import { apiFetch } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
@@ -181,12 +182,28 @@ function Historial() {
 function NewListForm({ onCreated }: { onCreated: () => void }) {
   const { data: projects } = useApi<ProjectOption[]>('/projects')
   const [projectId, setProjectId] = useState('')
+  const [projectQuery, setProjectQuery] = useState('')
+  const [projectPicked, setProjectPicked] = useState<ComboOption | null>(null)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  /** /projects no admite `?search=`: filtramos en memoria sobre la lista. */
+  const projectOptions = useMemo<ComboOption[]>(
+    () =>
+      (projects ?? []).map((p) => ({
+        id: p.id,
+        label: `${p.client.name} · ${p.name}`,
+      })),
+    [projects],
+  )
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!projectId) {
+      setError('Selecciona una obra o servicio.')
+      return
+    }
     setSaving(true)
     setError(null)
     try {
@@ -206,19 +223,19 @@ function NewListForm({ onCreated }: { onCreated: () => void }) {
     <form onSubmit={submit} className="card mb-4 grid gap-3">
       <div>
         <label className="label">Obra / servicio *</label>
-        <select
-          className="input"
-          required
-          value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
-        >
-          <option value="">Selecciona una obra…</option>
-          {projects?.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.client.name} · {p.name}
-            </option>
-          ))}
-        </select>
+        <Combobox
+          options={projectOptions}
+          query={projectQuery}
+          onQueryChange={setProjectQuery}
+          value={projectPicked}
+          onChange={(opt) => {
+            setProjectPicked(opt)
+            setProjectId(opt?.id ?? '')
+          }}
+          placeholder="Buscar obra o servicio…"
+          emptyText="Ninguna obra coincide."
+          ariaLabel="Obra o servicio"
+        />
       </div>
       <div>
         <label className="label">Notas</label>
