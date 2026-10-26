@@ -28,7 +28,31 @@ export class ProjectsService {
         client: true,
         lists: {
           orderBy: { createdAt: 'desc' },
-          include: { _count: { select: { items: true } } },
+          include: {
+            _count: { select: { items: true } },
+            items: {
+              orderBy: { createdAt: 'asc' },
+              select: {
+                id: true,
+                materialId: true,
+                requestedQty: true,
+                preparedQty: true,
+                unit: true,
+                notes: true,
+                material: {
+                  select: {
+                    id: true,
+                    sku: true,
+                    name: true,
+                    category: true,
+                    unit: true,
+                    stock: true,
+                    active: true,
+                  },
+                },
+              },
+            },
+          },
         },
       },
     })

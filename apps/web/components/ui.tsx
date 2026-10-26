@@ -1,6 +1,11 @@
-import type { MaterialListStatus, ServiceType } from '@erp/shared'
+import type {
+  MaterialListStatus,
+  ProjectStatus,
+  ServiceType,
+} from '@erp/shared'
 import {
   MATERIAL_LIST_STATUS_LABELS,
+  PROJECT_STATUS_LABELS,
   SERVICE_TYPE_LABELS,
 } from '@erp/shared'
 
@@ -13,6 +18,22 @@ export function StatusBadge({ status }: { status: string }) {
     LISTO: 'bg-blue-100 text-blue-700',
     CONFIRMADO: 'bg-emerald-100 text-emerald-700',
     ENVIADO: 'bg-brand-light text-brand-dark',
+  }
+  return (
+    <span className={`badge ${colors[status] ?? 'bg-slate-100 text-slate-600'}`}>
+      {label}
+    </span>
+  )
+}
+
+/** Estado de la obra (proyecto), con sus etiquetas y colores propios. */
+export function ProjectStatusBadge({ status }: { status: string }) {
+  const label = PROJECT_STATUS_LABELS[status as ProjectStatus] ?? status
+  const colors: Record<string, string> = {
+    ABIERTA: 'bg-emerald-100 text-emerald-700',
+    EN_CURSO: 'bg-blue-100 text-blue-700',
+    FINALIZADA: 'bg-slate-100 text-slate-600',
+    CANCELADA: 'bg-red-100 text-red-700',
   }
   return (
     <span className={`badge ${colors[status] ?? 'bg-slate-100 text-slate-600'}`}>

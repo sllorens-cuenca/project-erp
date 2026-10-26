@@ -92,7 +92,7 @@ export default function ClientDetailPage() {
               {data.projects.map((p) => (
                 <Link
                   key={p.id}
-                  href={`/historial?obra=${p.id}`}
+                  href={`/obras/${p.id}`}
                   className="card flex flex-col justify-between active:bg-slate-50"
                 >
                   <div>
@@ -109,7 +109,7 @@ export default function ClientDetailPage() {
                     </p>
                   </div>
                   <span className="mt-3 text-sm text-brand-dark">
-                    Ver historial →
+                    Ver obra →
                   </span>
                 </Link>
               ))}

@@ -7,6 +7,11 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
 - Web desplegada: `project-erp-vercel.vercel.app` (Vercel) + `erp-api-bojd.onrender.com` (Render
   free) + Neon `production`. Dev: API :3001, web :3000. Repo `sllorens-cuenca/project-erp` (`main`).
   Node 22 vía nvm (el sistema trae 12). Email prod **Gmail SMTP**, local `json`.
+- **Ficha de obra**: ruta nueva `/obras/[id]`. `GET /projects/:id` ampliado con `lists[].items` +
+  `items[].material` (una petición). Tarjeta de obra en `/clientes/[id]` pasa a «Ver obra» →
+  `/obras/[id]`. Resumen consolidado (fila por material+unidad, sumas, estados con recuento por
+  flujo), detalle por registro (más reciente primero), alta desde ficha con obra fija (solo
+  ADMIN/ALMACENERO), refresco al volver (focus/visibility), enlace «← Obra» en `historial/[id]`.
 - Últimos cambios: «Listados» → **«Historial»** (`/historial` + redirect 308); tarjetas en móvil
   (Clientes, Historial, Materiales, Movimientos, carpetas de obra y la tabla del registro);
   buscador con sugerencias en Clientes, Materiales y «+ Nuevo registro»; **selector con
@@ -14,6 +19,9 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
   «Modo rápido»). Los textos de la API ya dicen «registro» y están desplegados en Render.
 - **Demo en producción**: 4 clientes, 4 obras, 10 materiales, 4 registros; limpiar con
   `/tmp/opencode/demo-clean.sh` (IDs en `/tmp/opencode/demo-ids.json`).
+- **Despliegue Render (manual):** Manual Deploy → **Clear build cache** + verificar `/api/health`
+  con el commit nuevo. **Recordatorio:** ajustar diseño de la ficha de obra más adelante
+  (jerarquía/densidad/colores) — la spec solo fijaba contenido/comportamiento.
 
 ## Decisiones (y por qué)
 

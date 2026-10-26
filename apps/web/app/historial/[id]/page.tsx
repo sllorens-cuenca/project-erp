@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { AppShell } from '@/components/AppShell'
 import { Combobox, type ComboOption } from '@/components/Combobox'
-import { EmptyState, ServiceBadge, StatusBadge } from '@/components/ui'
+import { EmptyState, ErrorState, ServiceBadge, StatusBadge } from '@/components/ui'
 import { MATERIAL_UNITS, MaterialListStatus } from '@erp/shared'
 import { apiFetch, downloadFile, openPrintable } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
@@ -63,9 +63,25 @@ interface CommandResult {
 }
 
 export default function HistorialDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <AppShell>
+          <p className="text-sm text-slate-500">Cargando…</p>
+        </AppShell>
+      }
+    >
+      <HistorialDetailContent />
+    </Suspense>
+  )
+}
+
+function HistorialDetailContent() {
   const params = useParams<{ id: string }>()
   const id = params.id
-  const { data, loading, reload } = useApi<ListDetail>(
+  const searchParams = useSearchParams()
+  const obraParam = searchParams.get('obra')
+  const { data, loading, reload, errorStatus } = useApi<ListDetail>(
     id ? `/lists/${id}` : null,
   )
   const [busy, setBusy] = useState(false)
@@ -111,14 +127,36 @@ export default function HistorialDetailPage() {
 
   return (
     <AppShell>
-      <Link href="/historial" className="text-sm text-slate-500 hover:underline">
-        ← Historial
-      </Link>
+      <div className="mb-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+        <Link href="/historial" className="hover:underline">
+          ← Historial
+        </Link>
+        {data?.project && (
+          <Link
+            href={`/obras/${data.project.id}`}
+            className="hover:underline"
+          >
+            ← Obra {data.project.name}
+          </Link>
+        )}
+      </div>
 
       {loading ? (
         <p className="mt-4 text-sm text-slate-500">Cargando…</p>
       ) : !data ? (
-        <EmptyState>Registro no encontrado.</EmptyState>
+        <div className="mt-4 space-y-3">
+          <ErrorState>Registro no encontrado</ErrorState>
+          <div className="flex flex-wrap gap-3 text-sm">
+            {obraParam ? (
+              <Link href={`/obras/${obraParam}`} className="text-brand hover:underline">
+                Volver a la obra
+              </Link>
+            ) : null}
+            <Link href="/historial" className="text-slate-500 hover:underline">
+              Volver al historial
+            </Link>
+          </div>
+        </div>
       ) : (
         <>
           <div className="mb-4 mt-2 flex flex-wrap items-start justify-between gap-3">
