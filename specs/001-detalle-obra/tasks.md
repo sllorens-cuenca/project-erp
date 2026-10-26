@@ -64,7 +64,7 @@ responsive → verificación. Diez tareas (límite de la skill). Node 22 vía nv
   español sin detalles técnicos y al reintentar se conservan obra y notas; `npm run build -w
   @erp/web` pasa.
 
-- [ ] **T8. Refresco al volver y estados vacíos de la obra.** RF-29, RF-33, RF-34
+- [x] **T8. Refresco al volver y estados vacíos de la obra.** RF-29, RF-33, RF-34
 - Hecho cuando: tras añadir o modificar una línea en un registro y volver a la ficha (enlace o
   botón atrás), resumen, totales y detalle reflejan el cambio sin recargar a mano; una obra sin
   registros muestra un único estado vacío en la zona de resumen/detalle con cabecera y totales a 0

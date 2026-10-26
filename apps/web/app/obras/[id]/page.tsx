@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { AppShell } from '@/components/AppShell'
@@ -26,6 +26,19 @@ export default function ObraDetailPage() {
   )
   const { user } = useAuth()
   const [showForm, setShowForm] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        void reload({ silent: true })
+      }
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow)
+    }
+  }, [reload])
 
   // Mientras carga no se muestra ni «no encontrada» ni ningún vacío (RF-30).
   if (loading) {
@@ -118,25 +131,6 @@ export default function ObraDetailPage() {
           </Link>
         </header>
 
-        {puedeCrear && (
-          <section className="mb-6">
-            {!showForm ? (
-              <button
-                className="btn-secondary"
-                onClick={() => setShowForm(true)}
-              >
-                + Nuevo registro
-              </button>
-            ) : (
-              <NuevoRegistroObraForm
-                obraId={data.id}
-                obraNombre={data.name}
-                onCancel={() => setShowForm(false)}
-              />
-            )}
-          </section>
-        )}
-
         <section className="mb-8" aria-labelledby="obra-resumen-titulo">
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2 id="obra-resumen-titulo" className="text-lg font-semibold">
@@ -149,14 +143,6 @@ export default function ObraDetailPage() {
           <EmptyState>
             <p className="font-medium text-slate-700">Sin registros en esta obra</p>
             <p className="mt-1">Aún no hay registros de materiales para esta obra.</p>
-            {puedeCrear && !showForm && (
-              <button
-                className="btn-secondary mt-3"
-                onClick={() => setShowForm(true)}
-              >
-                + Crear primer registro
-              </button>
-            )}
           </EmptyState>
         </section>
       </AppShell>
@@ -208,7 +194,7 @@ export default function ObraDetailPage() {
               className="btn-secondary"
               onClick={() => setShowForm(true)}
             >
-              + Nuevo registro
+              Añadir materiales
             </button>
           ) : (
             <NuevoRegistroObraForm

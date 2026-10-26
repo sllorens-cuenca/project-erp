@@ -131,12 +131,12 @@ function HistorialDetailContent() {
         <Link href="/historial" className="hover:underline">
           ← Historial
         </Link>
-        {data?.project && (
+        {(data?.project?.id || obraParam) && (
           <Link
-            href={`/obras/${data.project.id}`}
+            href={`/obras/${data?.project?.id ?? obraParam}`}
             className="hover:underline"
           >
-            ← Obra {data.project.name}
+            ← Obra {data?.project?.name ?? 'de esta obra'}
           </Link>
         )}
       </div>

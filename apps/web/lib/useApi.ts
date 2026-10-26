@@ -57,11 +57,18 @@ export function useApi<T>(
         void reload({ silent: true })
       }
     }
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        void reload({ silent: true })
+      }
+    }
     window.addEventListener('focus', handleFocus)
     document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pageshow', handlePageShow)
     return () => {
       window.removeEventListener('focus', handleFocus)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pageshow', handlePageShow)
     }
   }, [reload])
 
