@@ -14,7 +14,7 @@ interface VoiceDictationProps {
 export function VoiceDictation({ onTranscript, onError, disabled }: VoiceDictationProps) {
   const [listening, setListening] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
-  const [hasMic, setHasMic] = useState(true)
+  const [liveTranscript, setLiveTranscript] = useState('')
   const recognitionRef = useRef<any>(null)
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -66,16 +66,19 @@ export function VoiceDictation({ onTranscript, onError, disabled }: VoiceDictati
             interimText += transcript
           }
         }
+        if (interimText) {
+          setLiveTranscript(interimText)
+        }
         if (finalText) {
+          setLiveTranscript('')
           onTranscript(finalText, true)
-        } else if (interimText) {
-          onTranscript(interimText, false)
         }
       }
 
       recog.onerror = (event: any) => {
         setListening(false)
         clearSilence()
+        setLiveTranscript('')
         if (event.error === 'not-allowed') {
           onError?.('Sin permiso para el micrófono. Actívalo en la configuración del navegador.')
         } else if (event.error === 'no-speech') {
@@ -90,14 +93,17 @@ export function VoiceDictation({ onTranscript, onError, disabled }: VoiceDictati
       recog.onend = () => {
         setListening(false)
         clearSilence()
+        setLiveTranscript('')
       }
 
       await recog.start()
       setListening(true)
+      setLiveTranscript('')
       startSilenceTimer()
     } catch (e: any) {
       setListening(false)
       clearSilence()
+      setLiveTranscript('')
       if (e?.name === 'NotAllowedError') {
         onError?.('Sin permiso para el micrófono. Actívalo en la configuración del navegador.')
       } else {
@@ -112,6 +118,7 @@ export function VoiceDictation({ onTranscript, onError, disabled }: VoiceDictati
     } catch {}
     setListening(false)
     clearSilence()
+    setLiveTranscript('')
   }, [])
 
   useEffect(() => {
@@ -178,6 +185,14 @@ export function VoiceDictation({ onTranscript, onError, disabled }: VoiceDictati
         </button>
         {listening && <span className="text-xs text-slate-500">Escuchando…</span>}
       </div>
+      {listening && liveTranscript && (
+        <div
+          className="mt-2 w-full rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600"
+          aria-live="polite"
+        >
+          {liveTranscript}
+        </div>
+      )}
 
       {showPrivacy && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
