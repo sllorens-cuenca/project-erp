@@ -131,6 +131,25 @@ export default function ObraDetailPage() {
           </Link>
         </header>
 
+        {puedeCrear && (
+          <section className="mb-6">
+            {!showForm ? (
+              <button
+                className="btn-secondary"
+                onClick={() => setShowForm(true)}
+              >
+                Añadir materiales
+              </button>
+            ) : (
+              <NuevoRegistroObraForm
+                obraId={data.id}
+                obraNombre={data.name}
+                onCancel={() => setShowForm(false)}
+              />
+            )}
+          </section>
+        )}
+
         <section className="mb-8" aria-labelledby="obra-resumen-titulo">
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2 id="obra-resumen-titulo" className="text-lg font-semibold">

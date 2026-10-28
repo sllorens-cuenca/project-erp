@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsPositive, IsString } from 'class-validator'
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator'
 
 export class AddItemDto {
   /** Puede indicarse por id o por nombre/sku (útil para la barra de comandos). */
@@ -16,7 +16,7 @@ export class AddItemDto {
 
   @IsOptional()
   @IsNumber()
-  @IsPositive()
+  @Min(0.000001)
   requestedQty?: number
 
   @IsOptional()

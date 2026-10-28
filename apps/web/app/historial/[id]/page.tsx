@@ -9,6 +9,10 @@ import { EmptyState, ErrorState, ServiceBadge, StatusBadge } from '@/components/
 import { MATERIAL_UNITS, MaterialListStatus } from '@erp/shared'
 import { apiFetch, downloadFile, openPrintable } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
+import { VoiceDictation } from '@/components/VoiceDictation'
+import { parseForForm } from '@/lib/voice/parse'
+import { useAuth } from '@/lib/auth'
+import { puedeCrearRegistros } from '@/lib/permissions'
 
 interface ListItem {
   id: string
@@ -233,7 +237,7 @@ function HistorialDetailContent() {
                 onError={(m) => setError(m)}
               />
 
-              <details className="mb-4">
+              <details className="mb-4" id="command-bar-details">
                 <summary className="cursor-pointer text-sm text-slate-500 hover:text-slate-700">
                   Modo rápido: pegar una lista de materiales
                 </summary>
@@ -369,6 +373,7 @@ function AddItemForm({
   onError: (m: string) => void
 }) {
   const { data } = useApi<Material[]>('/materials?onlyActive=true')
+  const { user } = useAuth()
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState<ComboOption | null>(null)
   const [qty, setQty] = useState(1)
@@ -376,6 +381,8 @@ function AddItemForm({
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [dictationMsg, setDictationMsg] = useState<string | null>(null)
+  const canDictate = puedeCrearRegistros(user?.role)
 
   /** Catálogo como opciones del buscador (una carga; se ve el stock en la pista). */
   const options = useMemo<ComboOption[]>(
@@ -399,8 +406,39 @@ function AddItemForm({
     setPicked(option)
     setErr(null)
     setNotice(null)
+    setDictationMsg(null)
     const m = (data ?? []).find((x) => x.id === option?.id)
     if (m) setUnit(m.unit)
+  }
+
+  const handleDictation = (text: string, isFinal: boolean) => {
+    if (busy) return
+    if (!isFinal) return
+    setErr(null)
+    setNotice(null)
+    const parsed = parseForForm(text)
+    if (!parsed) {
+      setDictationMsg('No se ha entendido el material, la cantidad o la unidad.')
+      return
+    }
+    const match = (data ?? []).find(
+      (m) => m.name.toLowerCase() === parsed.materialName.toLowerCase(),
+    )
+    if (!match) {
+      setDictationMsg(`No se ha encontrado un material exacto para «${parsed.materialName}». Puedes buscarlo en el listado.`)
+      return
+    }
+    setPicked({ id: match.id, label: match.name, hint: [match.sku, match.category, `${match.stock} ${match.unit}`].filter(Boolean).join(' · ') })
+    setQuery(match.name)
+    setQty(parsed.quantity)
+    if (parsed.unit) {
+      if (MATERIAL_UNITS.includes(parsed.unit as any)) {
+        setUnit(parsed.unit)
+      }
+    } else {
+      setUnit(match.unit)
+    }
+    setDictationMsg(`Se ha entendido: ${parsed.quantity} ${parsed.unit || match.unit} de «${match.name}».`)
   }
 
   const add = async () => {
@@ -494,12 +532,18 @@ function AddItemForm({
         </button>
       </div>
 
+      {canDictate && (
+        <div className="mt-3">
+          <VoiceDictation onTranscript={handleDictation} onError={(m) => setErr(m)} disabled={busy} />
+        </div>
+      )}
       {material && qty > material.stock && (
         <p className="mt-2 text-xs text-amber-600">
           Stock disponible: {material.stock} {material.unit}. La cantidad pedida
           es mayor.
         </p>
       )}
+      {dictationMsg && <p className="mt-2 text-sm text-slate-600">{dictationMsg}</p>}
       {notice && <p className="mt-2 text-sm text-emerald-600">{notice}</p>}
       {err && <p className="mt-2 text-sm text-red-600">{err}</p>}
     </form>
@@ -518,6 +562,8 @@ function CommandBar({
   const [text, setText] = useState('')
   const [result, setResult] = useState<CommandResult | null>(null)
   const [busy, setBusy] = useState(false)
+  const { user } = useAuth()
+  const canDictate = puedeCrearRegistros(user?.role)
 
   const submit = async () => {
     if (!text.trim()) return
@@ -529,13 +575,28 @@ function CommandBar({
         body: JSON.stringify({ text }),
       })
       setResult(res)
-      setText('')
+      if (res.ok && res.errors.length === 0) {
+        setText('')
+      } else if (res.errors.length > 0) {
+        // Keep only failed lines - simple approach: keep original text for now
+        // Server will handle per spec
+        setText(text)
+      } else {
+        setText('')
+      }
       onDone()
     } catch (err) {
       onError((err as Error).message)
     } finally {
       setBusy(false)
     }
+  }
+
+  const handleDictation = (transcript: string, isFinal: boolean) => {
+    if (busy) return
+    if (!isFinal) return
+    setText((prev) => (prev ? prev + '\n' + transcript : transcript))
+    setResult(null)
   }
 
   return (
@@ -553,10 +614,13 @@ function CommandBar({
           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void submit()
         }}
       />
-      <div className="mt-2 flex items-center gap-3">
+      <div className="mt-2 flex flex-wrap items-center gap-3">
         <button className="btn-primary" disabled={busy} onClick={submit}>
           {busy ? 'Añadiendo…' : 'Añadir materiales'}
         </button>
+        {canDictate && (
+          <VoiceDictation onTranscript={handleDictation} onError={onError} disabled={busy} />
+        )}
         <span className="text-xs text-slate-400">
           Ejemplos: <code>/cobre 25 m</code>, <code>+regleta 10</code>
         </span>

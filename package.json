@@ -11,6 +11,7 @@
     "dev:api": "npm run start:dev --workspace @erp/api",
     "dev:web": "npm run dev --workspace @erp/web",
     "build": "npm run build --workspaces --if-present",
+    "test": "node --experimental-strip-types --test \"apps/web/lib/voice/**/*.test.ts\" \"packages/shared/src/voice/**/*.test.ts\"",
     "db:migrate": "npm run prisma:migrate --workspace @erp/api",
     "db:deploy": "npm run prisma:deploy --workspace @erp/api",
     "db:generate": "npm run prisma:generate --workspace @erp/api",

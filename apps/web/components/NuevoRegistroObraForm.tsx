@@ -6,6 +6,10 @@ import { MATERIAL_UNITS } from '@erp/shared'
 import { apiFetch } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
 import { Combobox, type ComboOption } from '@/components/Combobox'
+import { VoiceDictation } from '@/components/VoiceDictation'
+import { parseForForm } from '@/lib/voice/parse'
+import { useAuth } from '@/lib/auth'
+import { puedeCrearRegistros } from '@/lib/permissions'
 
 interface NuevoRegistroObraFormProps {
   obraId: string
@@ -34,6 +38,7 @@ export function NuevoRegistroObraForm({
 }: NuevoRegistroObraFormProps) {
   const router = useRouter()
   const { data: materials } = useApi<Material[]>('/materials?onlyActive=true')
+  const { user } = useAuth()
 
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState<ComboOption | null>(null)
@@ -42,6 +47,8 @@ export function NuevoRegistroObraForm({
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dictationMsg, setDictationMsg] = useState<string | null>(null)
+  const canDictate = puedeCrearRegistros(user?.role)
 
   const options = useMemo<ComboOption[]>(
     () =>
@@ -63,8 +70,37 @@ export function NuevoRegistroObraForm({
   const pick = (option: ComboOption | null) => {
     setPicked(option)
     setError(null)
+    setDictationMsg(null)
     const m = (materials ?? []).find((x) => x.id === option?.id)
     if (m) setUnit(m.unit)
+  }
+
+  const handleDictation = (text: string, isFinal: boolean) => {
+    if (saving) return
+    if (!isFinal) return
+    setError(null)
+    setDictationMsg(null)
+    const parsed = parseForForm(text)
+    if (!parsed) {
+      setDictationMsg('No se ha entendido el material, la cantidad o la unidad.')
+      return
+    }
+    const match = (materials ?? []).find(
+      (m) => m.name.toLowerCase() === parsed.materialName.toLowerCase(),
+    )
+    if (!match) {
+      setDictationMsg(`No se ha encontrado un material exacto para «${parsed.materialName}». Puedes buscarlo en el listado.`)
+      return
+    }
+    setPicked({ id: match.id, label: match.name, hint: [match.sku, match.category, `${match.stock} ${match.unit}`].filter(Boolean).join(' · ') })
+    setQuery(match.name)
+    setQty(parsed.quantity)
+    if (parsed.unit && MATERIAL_UNITS.includes(parsed.unit as any)) {
+      setUnit(parsed.unit)
+    } else {
+      setUnit(match.unit)
+    }
+    setDictationMsg(`Se ha entendido: ${parsed.quantity} ${parsed.unit || match.unit} de «${match.name}».`)
   }
 
   const doSubmit = async () => {
@@ -179,6 +215,10 @@ export function NuevoRegistroObraForm({
         </div>
       </div>
 
+      {canDictate && (
+        <VoiceDictation onTranscript={handleDictation} onError={(m) => setError(m)} disabled={saving} />
+      )}
+
       {material && qty > material.stock && (
         <p className="text-xs text-amber-600">
           Stock disponible: {material.stock} {material.unit}. La cantidad pedida
@@ -186,6 +226,7 @@ export function NuevoRegistroObraForm({
         </p>
       )}
 
+      {dictationMsg && <p className="text-sm text-slate-600">{dictationMsg}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <div className="flex flex-wrap gap-2">

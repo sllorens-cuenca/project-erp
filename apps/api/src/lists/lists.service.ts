@@ -126,22 +126,26 @@ export class ListsService {
       throw new BadRequestException('El registro ya fue enviado')
     }
 
+    const qty = dto.requestedQty
+    if (qty === undefined || qty === null || !Number.isFinite(Number(qty)) || Number(qty) <= 0) {
+      throw new BadRequestException('La cantidad debe ser mayor que 0')
+    }
+
     const { material, unit } = await this.resolveMaterial(dto)
-    const qty = dto.requestedQty ?? 1
 
     // Si el material ya está en el registro, se acumula la cantidad.
     const existing = list.items.find((i) => i.materialId === material.id)
     if (existing) {
       await this.prisma.materialListItem.update({
         where: { id: existing.id },
-        data: { requestedQty: existing.requestedQty + qty },
+        data: { requestedQty: existing.requestedQty + Number(qty) },
       })
     } else {
       await this.prisma.materialListItem.create({
         data: {
           listId,
           materialId: material.id,
-          requestedQty: qty,
+          requestedQty: Number(qty),
           unit: unit ?? material.unit,
           notes: dto.notes,
         },

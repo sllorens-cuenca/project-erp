@@ -11,7 +11,8 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
   `items[].material` (una petición). Tarjeta de obra en `/clientes/[id]` pasa a «Ver obra» →
   `/obras/[id]`. Resumen consolidado (fila por material+unidad, sumas, estados con recuento por
   flujo), detalle por registro (más reciente primero), alta desde ficha con obra fija (solo
-  ADMIN/ALMACENERO), refresco al volver (focus/visibility), enlace «← Obra» en `historial/[id]`.
+  ADMIN/ALMACENERO; el botón «Añadir materiales» sale también con 0 registros, debajo del
+  vacío), refresco al volver (focus/visibility), enlace «← Obra» en `historial/[id]`.
 - Últimos cambios: «Listados» → **«Historial»** (`/historial` + redirect 308); tarjetas en móvil
   (Clientes, Historial, Materiales, Movimientos, carpetas de obra y la tabla del registro);
   buscador con sugerencias en Clientes, Materiales y «+ Nuevo registro»; **selector con
@@ -62,6 +63,8 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
 - Render build: `npm ci --include=dev` (devDeps con `NODE_ENV=production`) + `rm -rf` dist.
 - Nunca canalizar `prisma migrate deploy` por `head` (SIGPIPE → **P1002**); usar `tail`.
 - `downloadFile()`/`openPrintable()` llevan el JWT (abrir la URL a mano no). `pkill -f "next d[e]v"`.
+- Local con `next start`: si recompilas `@erp/web` con el servidor levantado, `.next` cambia y el
+  HTML viejo pide chunks borrados («Ha fallado la carga del <script>») → **reiniciar** el server.
 - `overflow-hidden` **recorta** la tabla en móvil (no se llegaba a «Quitar»): usar `overflow-x-auto`
   o tarjetas. `redirects()` de Next: `permanent:true` = **308** y conserva la query.
 - No hay tests, lint ni CI (tampoco script `typecheck`: `nest build` ya valida tipos).
@@ -71,3 +74,10 @@ Memoria entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aport
 - Demo en producción ya cargada y borrable (`/tmp/opencode/demo-clean.sh`).
 - Tras cada push a `main` que toque la API: Manual Deploy en Render y verificar `/api/health`.
   El renombrado a «registro» ya está desplegado (`GET /api/lists/:id/document`, CSV `registro-<id>.csv`).
+
+## 2026-10-28 — Spec 002 dictado por voz
+- Añadido dictado en historial/[id] (AddItemForm + CommandBar modo rápido) y obras/[id] (NuevoRegistroObraForm). Solo rellena, sin añadir directo. Requiere confirmación explícita.
+- Lógica pura: numerales ES posicional (última expresión), unidades habladas → códigos con precedencia, parseo por última cifra. Tests con `node --test` + tsx (`npm test`).
+- API: `command.parser.ts` normaliza numerales/unidades habladas, `lists.service.ts` acepta qty > 0 con validación explícita, conserva líneas fallidas (se devuelven errores).
+- Web Speech API con aviso privacidad persistente, silencio 2s, cierre navegador, un solo dictado, sin soporte → nota. Componente `VoiceDictation` reutilizable.
+- Permisos: ADMIN/ALMACENERO. Oculto si ENVIADO o sin permiso.
